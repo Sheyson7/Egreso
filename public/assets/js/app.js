@@ -13,7 +13,11 @@ bookingForm?.addEventListener('submit', (event) => {
         year: 'numeric',
     });
 
-    formMessage.textContent = `Vista previa: ${formData.get('court')} · ${date} · ${formData.get('time')}. Esta consulta todavía no se envió.`;
+    formMessage.textContent = [
+        'Vista previa:',
+        `${formData.get('court')} · ${date} · ${formData.get('time')}.`,
+        'Esta consulta todavía no se envió.',
+    ].join(' ');
     formMessage.classList.add('is-visible');
 });
 
