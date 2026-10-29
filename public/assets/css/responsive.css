@@ -1,0 +1,47 @@
+/* Ajustes de lectura y distribución para tabletas y teléfonos. */
+@media (max-width: 900px) and (min-width: 641px) {
+    .site-header { padding-inline: 4%; }
+    .main-nav { gap: 15px; }
+    .main-nav a { font-size: 10px; }
+    .header-cta { padding: 10px 12px; font-size: 10px; }
+    .hero-content { margin-left: 8%; }
+    .booking-section { padding: 72px 6%; }
+    .booking-card { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+    .field-group { border-right: 0; border-bottom: 1px solid #e6e9e4; padding: 12px 8px; }
+    .button-dark { grid-column: 1 / -1; width: 100%; }
+    .courts-section { padding: 76px 6%; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .courts-intro { grid-column: 1 / -1; padding: 0 0 12px; }
+    .court-card { height: 340px; }
+    .values-strip { padding-inline: 6%; gap: 18px; }
+    .value-item { align-items: flex-start; }
+    .location-section { padding: 76px 7%; gap: 5%; }
+    .location-visual { min-height: 270px; }
+    .account-cards { max-width: 640px; grid-template-columns: 1fr; }
+    .account-card { padding: 28px; }
+}
+
+@media (max-width: 640px) {
+    .site-header { gap: 8px; }
+    .main-nav { padding: 20px 6%; }
+    .main-nav a { font-size: 13px; padding: 4px 0; }
+    .booking-card { align-items: stretch; }
+    .field-group { min-height: 66px; }
+    .input-wrap select, .input-wrap input { font-size: 14px; }
+    .account-main { padding-top: 42px; }
+    .account-intro > p:last-child { font-size: 13px; }
+    .account-card { padding: 24px 20px 20px; }
+    .account-field input { height: 48px; font-size: 14px; }
+    .account-password-row { grid-template-columns: 1fr; gap: 17px; }
+}
+
+@media (max-width: 390px) {
+    .site-header { padding-inline: 4%; }
+    .brand { gap: 7px; font-size: 13px; }
+    .brand-mark { width: 29px; height: 29px; }
+    .header-cta { margin-right: 6px; padding: 9px 8px; font-size: 9px; }
+    .header-cta span { margin-left: 4px; }
+    .menu-toggle { width: 24px; padding-inline: 3px; }
+    .account-header { padding-inline: 5%; }
+    .account-back { font-size: 11px; }
+    .account-footer { font-size: 8px; }
+}
