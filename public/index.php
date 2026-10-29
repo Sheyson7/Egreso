@@ -28,6 +28,7 @@ $currentDate = (new DateTimeImmutable())->format('Y-m-d');
             <a href="#canchas">El complejo</a>
             <a href="#reservas">Reservas</a>
             <a href="#ubicacion">Ubicación</a>
+            <a href="/cuenta.php">Mi cuenta</a>
         </nav>
         <a class="header-cta" href="#reservas">Reservar cancha <span aria-hidden="true">↗</span></a>
         <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>

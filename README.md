@@ -17,3 +17,5 @@ php -S localhost:8000 -t public
 Luego abrir `http://localhost:8000`.
 
 La consulta de reserva es una vista previa de interfaz. Todavía no se envía ni se guarda, y los horarios son ilustrativos hasta confirmar disponibilidad, precios y datos de contacto con el cliente.
+
+La página `public/cuenta.php` contiene las interfaces preliminares para iniciar sesión y registrarse. Todavía no hay autenticación ni almacenamiento de cuentas conectado.
