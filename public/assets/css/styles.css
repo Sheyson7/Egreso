@@ -297,6 +297,89 @@ h1 span {
     position: relative;
 }
 
+.booking-notice,
+.booking-user,
+.booking-summary {
+    grid-column: 1 / -1;
+}
+
+.booking-notice {
+    margin: 0;
+    padding: 12px 14px;
+    background: #edf2e6;
+    color: #334a2b;
+    font-size: 13px;
+}
+
+.booking-notice.error {
+    background: #fff0ec;
+    color: #8d382e;
+}
+
+.booking-summary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 13px 14px;
+    background: #f4f6ef;
+    color: #667267;
+    font-size: 12px;
+}
+
+.booking-summary strong {
+    color: var(--ink);
+    margin-left: 6px;
+}
+
+.booking-user {
+    color: #667267;
+    font-size: 12px;
+    text-align: right;
+}
+
+.booking-user a {
+    color: #416331;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.logout-form button {
+    border: 0;
+    background: transparent;
+    color: #c4d0c7;
+    font: inherit;
+    cursor: pointer;
+}
+
+.payment-result {
+    min-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+}
+
+.payment-result h1 {
+    font-size: clamp(40px, 7vw, 68px);
+}
+
+.payment-result h1 span {
+    color: var(--lime);
+}
+
+.payment-result > p:not(.eyebrow) {
+    max-width: 600px;
+    color: #c1cbc3;
+    line-height: 1.7;
+}
+
+.payment-result .button {
+    margin-top: 16px;
+}
+
 .field-group {
     min-width: 0;
     padding: 8px 12px;
@@ -343,6 +426,12 @@ h1 span {
 
 .button-dark:hover {
     background: #263e31;
+}
+
+.button:disabled {
+    opacity: .65;
+    cursor: wait;
+    transform: none;
 }
 
 .form-note {

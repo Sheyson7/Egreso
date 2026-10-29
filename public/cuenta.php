@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../src/bootstrap.php';
+
 $pageTitle = 'Mi cuenta | Seberih';
+$notice = take_flash();
 ?>
 <!doctype html>
 <html lang="es">
@@ -47,6 +50,9 @@ $pageTitle = 'Mi cuenta | Seberih';
         </div>
 
         <div class="account-cards">
+            <?php if ($notice): ?>
+                <p class="account-notice <?= e($notice['type']) ?>" role="status"><?= e($notice['message']) ?></p>
+            <?php endif; ?>
             <section class="account-card" id="iniciar-sesion" aria-labelledby="login-title">
                 <div class="account-card-heading">
                     <span class="account-card-index">01</span>
@@ -55,7 +61,9 @@ $pageTitle = 'Mi cuenta | Seberih';
                         <h2 id="login-title">Iniciar sesión</h2>
                     </div>
                 </div>
-                <form class="account-form" id="login-form" novalidate>
+                <form class="account-form" id="login-form" action="/auth.php" method="post">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <input type="hidden" name="action" value="login">
                     <div class="account-field">
                         <label for="login-email">Correo electrónico</label>
                         <input
@@ -81,9 +89,6 @@ $pageTitle = 'Mi cuenta | Seberih';
                     <button class="button button-dark account-submit" type="submit">
                         Ingresar <span aria-hidden="true">→</span>
                     </button>
-                    <p class="account-feedback" id="login-feedback" aria-live="polite">
-                        Interfaz preliminar: el inicio de sesión aún no está conectado.
-                    </p>
                 </form>
             </section>
 
@@ -95,7 +100,9 @@ $pageTitle = 'Mi cuenta | Seberih';
                         <h2 id="register-title">Crear cuenta</h2>
                     </div>
                 </div>
-                <form class="account-form" id="register-form" novalidate>
+                <form class="account-form" id="register-form" action="/auth.php" method="post">
+                    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                    <input type="hidden" name="action" value="register">
                     <div class="account-field">
                         <label for="register-name">Nombre y apellido</label>
                         <input
@@ -151,9 +158,6 @@ $pageTitle = 'Mi cuenta | Seberih';
                     <button class="button button-primary account-submit" type="submit">
                         Crear mi cuenta <span aria-hidden="true">→</span>
                     </button>
-                    <p class="account-feedback" id="register-feedback" aria-live="polite">
-                        Interfaz preliminar: el registro aún no guarda tus datos.
-                    </p>
                 </form>
             </section>
         </div>

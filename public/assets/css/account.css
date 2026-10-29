@@ -64,6 +64,21 @@
     margin: 0 auto;
 }
 
+.account-notice {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 14px 16px;
+    background: #e8f0df;
+    color: #34492d;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.account-notice.error {
+    background: #fff0ec;
+    color: #8d382e;
+}
+
 .account-card {
     background: #f5f5ef;
     color: var(--ink);

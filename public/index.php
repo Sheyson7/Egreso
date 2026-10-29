@@ -1,9 +1,13 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../src/reservations.php';
+
 $pageTitle = 'Seberih | Fútbol, amigos y buenos momentos';
 $currentDate = (new DateTimeImmutable())->format('Y-m-d');
 $minimumDate = htmlspecialchars($currentDate, ENT_QUOTES, 'UTF-8');
+$user = $_SESSION['user'] ?? null;
+$notice = take_flash();
 ?>
 <!doctype html>
 <html lang="es">
@@ -36,7 +40,7 @@ $minimumDate = htmlspecialchars($currentDate, ENT_QUOTES, 'UTF-8');
             <a href="#canchas">El complejo</a>
             <a href="#reservas">Reservas</a>
             <a href="#ubicacion">Ubicación</a>
-            <a href="/cuenta.php">Mi cuenta</a>
+            <a href="/cuenta.php"><?= $user ? 'Hola, ' . e($user['name']) : 'Mi cuenta' ?></a>
         </nav>
         <a class="header-cta" href="#reservas">Reservar cancha <span aria-hidden="true">↗</span></a>
         <button class="menu-toggle" type="button" aria-label="Abrir menú" aria-expanded="false">
@@ -77,14 +81,17 @@ $minimumDate = htmlspecialchars($currentDate, ENT_QUOTES, 'UTF-8');
                 <h2>Reservá tu cancha<span class="accent-dot">.</span></h2>
                 <p>Elegí el día y el horario que mejor le quede al equipo.</p>
             </div>
-            <form class="booking-card" id="booking-form">
+            <form class="booking-card" id="booking-form" data-logged-in="<?= $user ? 'true' : 'false' ?>" data-csrf="<?= e(csrf_token()) ?>">
+                <?php if ($notice): ?>
+                    <p class="booking-notice <?= e($notice['type']) ?>" role="status"><?= e($notice['message']) ?></p>
+                <?php endif; ?>
                 <div class="field-group field-select">
                     <label for="court">CANCHA</label>
                     <div class="input-wrap">
                         <span class="input-icon" aria-hidden="true">▦</span>
                         <select id="court" name="court" required>
-                            <option value="Cancha 1">Cancha 1</option>
-                            <option value="Cancha 2">Cancha 2</option>
+                            <option value="1">Cancha 1</option>
+                            <option value="2">Cancha 2</option>
                         </select>
                     </div>
                 </div>
@@ -107,27 +114,22 @@ $minimumDate = htmlspecialchars($currentDate, ENT_QUOTES, 'UTF-8');
                         <span class="input-icon" aria-hidden="true">◷</span>
                         <select id="time" name="time" required>
                             <option value="" disabled selected>Elegí un horario</option>
-                            <option>09:00</option>
-                            <option>10:00</option>
-                            <option>11:00</option>
-                            <option>12:00</option>
-                            <option>14:00</option>
-                            <option>15:00</option>
-                            <option>16:00</option>
-                            <option>17:00</option>
-                            <option>18:00</option>
-                            <option>19:00</option>
-                            <option>20:00</option>
-                            <option>21:00</option>
                         </select>
                     </div>
                 </div>
                 <button class="button button-dark" type="submit">
-                    Consultar <span aria-hidden="true">→</span>
+                    <?= $user ? 'Pagar seña' : 'Iniciar sesión' ?> <span aria-hidden="true">→</span>
                 </button>
-                <p class="form-note" id="form-message" aria-live="polite">
-                    Prototipo: la consulta no se envía ni guarda todavía.
-                </p>
+                <div class="booking-summary" aria-live="polite">
+                    <span>Valor por hora <strong id="booking-price">$ 1.200 UYU</strong></span>
+                    <span>Seña para confirmar (15%) <strong id="booking-deposit">$ 180 UYU</strong></span>
+                </div>
+                <p class="form-note" id="form-message" aria-live="polite">La seña confirma el turno; el saldo se paga en el complejo.</p>
+                <?php if ($user): ?>
+                    <div class="booking-user">Reserva a nombre de <strong><?= e($user['name']) ?></strong></div>
+                <?php else: ?>
+                    <div class="booking-user">Para reservar necesitás <a href="/cuenta.php#iniciar-sesion">iniciar sesión</a> o <a href="/cuenta.php#registrarse">crear tu cuenta</a>.</div>
+                <?php endif; ?>
             </form>
         </section>
 
@@ -225,6 +227,13 @@ $minimumDate = htmlspecialchars($currentDate, ENT_QUOTES, 'UTF-8');
         </a>
         <p>El partido empieza acá.</p>
         <span class="footer-copy">© <?= date('Y') ?> Seberih · Sauce, Canelones</span>
+        <?php if ($user): ?>
+            <form action="/auth.php" method="post" class="logout-form">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="logout">
+                <button type="submit">Cerrar sesión</button>
+            </form>
+        <?php endif; ?>
     </footer>
 </body>
 </html>
