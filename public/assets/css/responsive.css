@@ -103,6 +103,10 @@
         align-items: stretch;
     }
 
+    .date-quick-options {
+        grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+    }
+
     .field-group {
         min-height: 66px;
     }

@@ -12,28 +12,58 @@ function booking_price(): int
 
 function booking_deposit(): int
 {
-    return (int) round(booking_price() * (int) config('BOOKING_DEPOSIT_PERCENT', '15') / 100);
+    return booking_deposit_for(1);
 }
 
-function valid_booking_date(string $date, string $time): ?DateTimeImmutable
+function booking_deposit_for(int $duration): int
 {
+    return (int) round(booking_price() * $duration * (int) config('BOOKING_DEPOSIT_PERCENT', '15') / 100);
+}
+
+function booking_date_limit(): DateTimeImmutable
+{
+    $today = new DateTimeImmutable('today');
+    $targetMonth = $today->modify('first day of this month')->modify('+3 months');
+    return $targetMonth->setDate(
+        (int) $targetMonth->format('Y'),
+        (int) $targetMonth->format('m'),
+        min((int) $today->format('j'), (int) $targetMonth->format('t')),
+    );
+}
+
+function valid_booking_date(string $date, string $time, int $duration = 1): ?DateTimeImmutable
+{
+    if ($duration < 1 || $duration > 8) {
+        return null;
+    }
     $start = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date . ' ' . $time);
     $errors = DateTimeImmutable::getLastErrors();
     if (!$start || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) || $start->format('Y-m-d H:i') !== $date . ' ' . $time) {
         return null;
     }
 
-    $end = $start->modify('+1 hour');
-    $lastStart = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date . ' 21:00');
-    if ($start <= new DateTimeImmutable('now') || $end > $lastStart) {
+    $today = new DateTimeImmutable('today');
+    if ($start->setTime(0, 0) < $today || $start->setTime(0, 0) > booking_date_limit()) {
+        return null;
+    }
+
+    for ($hour = 0; $hour < $duration; $hour++) {
+        if (!in_array($start->modify("+{$hour} hours")->format('H:i'), BOOKING_HOURS, true)) {
+            return null;
+        }
+    }
+
+    $end = $start->modify("+{$duration} hours");
+    $closingTime = $start->setTime(22, 0);
+    if ($start <= new DateTimeImmutable('now') || $end > $closingTime) {
         return null;
     }
     return $start;
 }
 
-function available_hours(int $courtId, string $date): array
+function available_hours(int $courtId, string $date, int $duration = 1): array
 {
-    if ($courtId < 1 || $courtId > 2 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+    if ($courtId < 1 || $courtId > 2 || $duration < 1 || $duration > 8 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         return [];
     }
 
@@ -48,8 +78,17 @@ function available_hours(int $courtId, string $date): array
     $busy = array_column($statement->fetchAll(), 'slot_time');
 
     $today = (new DateTimeImmutable('today'))->format('Y-m-d');
-    return array_values(array_filter(BOOKING_HOURS, static function (string $hour) use ($date, $today, $busy): bool {
-        return !in_array($hour, $busy, true) && ($date !== $today || valid_booking_date($date, $hour) !== null);
+    return array_values(array_filter(BOOKING_HOURS, static function (string $hour) use ($date, $today, $busy, $duration): bool {
+        $start = valid_booking_date($date, $hour, $duration);
+        if (!$start || ($date === $today && $start <= new DateTimeImmutable('now'))) {
+            return false;
+        }
+        for ($offset = 0; $offset < $duration; $offset++) {
+            if (in_array($start->modify("+{$offset} hours")->format('H:i'), $busy, true)) {
+                return false;
+            }
+        }
+        return true;
     }));
 }
 
@@ -104,14 +143,14 @@ function mercado_pago_request(string $method, string $path, ?array $payload = nu
     return $decoded;
 }
 
-function start_reservation(array $user, int $courtId, string $date, string $time): string
+function start_reservation(array $user, int $courtId, string $date, string $time, int $duration): string
 {
     $siteUrl = config('APP_URL', 'http://localhost:8000');
     if (!config('MERCADOPAGO_ACCESS_TOKEN') || !config('MERCADOPAGO_WEBHOOK_SECRET') || !str_starts_with($siteUrl, 'https://')) {
         throw new RuntimeException('Las reservas con pago todavía no están habilitadas: el complejo debe configurar Mercado Pago y publicar el sitio con HTTPS.');
     }
 
-    $start = valid_booking_date($date, $time);
+    $start = valid_booking_date($date, $time, $duration);
     if (!$start || $courtId < 1 || $courtId > 2 || !in_array($time, BOOKING_HOURS, true)) {
         throw new DomainException('Ese horario no es válido. Elegí otro horario disponible.');
     }
@@ -132,13 +171,15 @@ function start_reservation(array $user, int $courtId, string $date, string $time
             $user['id'],
             $courtId,
             $start->format('Y-m-d H:i:s'),
-            $start->modify('+1 hour')->format('Y-m-d H:i:s'),
-            booking_price(),
-            booking_deposit(),
+            $start->modify("+{$duration} hours")->format('Y-m-d H:i:s'),
+            booking_price() * $duration,
+            booking_deposit_for($duration),
             $expiresAt->format('Y-m-d H:i:s'),
         ]);
-        $connection->prepare('INSERT INTO reservation_slots (court_id, slot_start, reservation_id) VALUES (?, ?, ?)')
-            ->execute([$courtId, $start->format('Y-m-d H:i:s'), $reservationId]);
+        $slotInsert = $connection->prepare('INSERT INTO reservation_slots (court_id, slot_start, reservation_id) VALUES (?, ?, ?)');
+        for ($offset = 0; $offset < $duration; $offset++) {
+            $slotInsert->execute([$courtId, $start->modify("+{$offset} hours")->format('Y-m-d H:i:s'), $reservationId]);
+        }
         $connection->commit();
     } catch (PDOException $error) {
         if ($connection->inTransaction()) {
@@ -159,10 +200,10 @@ function start_reservation(array $user, int $courtId, string $date, string $time
         $preference = mercado_pago_request('POST', '/checkout/preferences', [
             'items' => [[
                 'id' => $reservationId,
-                'title' => 'Seña de reserva · Cancha ' . $courtId,
+                'title' => 'Seña de reserva · Cancha ' . $courtId . ' · ' . $duration . ' h',
                 'quantity' => 1,
                 'currency_id' => 'UYU',
-                'unit_price' => booking_deposit(),
+                'unit_price' => booking_deposit_for($duration),
             ]],
             'external_reference' => $reservationId,
             'metadata' => ['reservation_id' => $reservationId],

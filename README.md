@@ -25,8 +25,9 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 
 - Tarifa inicial: $ 1.200 UYU por hora y por cancha.
 - Seña inicial: 15% ($ 180 UYU por una hora).
-- Una cuenta autenticada puede pedir una hora en una de dos canchas. La base de datos impide asignar el mismo turno dos veces.
+- Una cuenta autenticada puede pedir de una a ocho horas seguidas en una de dos canchas, sujeto al horario de apertura. Cada bloque queda ocupado y la base de datos impide cruzarlo con otra reserva.
 - El turno queda pendiente durante 15 minutos mientras se paga. El sitio verifica la firma de las notificaciones y consulta el pago a Mercado Pago; no usa la página de retorno como prueba de pago.
+- Se puede elegir desde hoy hasta la misma fecha de aquí a tres meses. Hay accesos rápidos a los próximos siete días y un calendario mensual para el resto del período.
 - Horarios iniciales (hora de comienzo): 09:00, 10:00, 11:00, 12:00 y 14:00 a 21:00. Son provisionales y deben ajustarse al horario real del complejo.
 
 Las credenciales se obtienen de la aplicación de Seberih en Mercado Pago Developers. La integración sigue la [guía oficial para crear preferencias de Checkout Pro](https://www.mercadopago.com.uy/developers/es/docs/checkout-pro-preferences/create-payment-preference) y la [guía oficial de notificaciones y firma de Webhooks](https://www.mercadopago.com.uy/developers/es/docs/checkout-pro-preferences/additional-content/notifications/webhooks).

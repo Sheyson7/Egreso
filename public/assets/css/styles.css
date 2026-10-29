@@ -291,10 +291,153 @@ h1 span {
     background: white;
     padding: 20px;
     display: grid;
-    grid-template-columns: 1fr 1.15fr 1fr auto;
+    grid-template-columns: 1.1fr .9fr 1.1fr auto;
     gap: 12px;
     box-shadow: 0 14px 50px rgba(16,35,27,.08);
     position: relative;
+}
+
+.date-select-field {
+    grid-column: 1 / -1;
+    border-right: 0;
+    border-bottom: 1px solid #e6e9e4;
+    padding: 8px 12px 16px;
+}
+
+.selected-date-label {
+    margin: -2px 0 12px;
+    color: #4f5e51;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.date-quick-options {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.date-option {
+    min-height: 58px;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 4px;
+    border: 1px solid #e1e6dc;
+    background: #fff;
+    color: #667267;
+    font: inherit;
+    cursor: pointer;
+}
+
+.date-option span {
+    font-size: 10px;
+    text-transform: capitalize;
+}
+
+.date-option strong {
+    color: var(--ink);
+    font-size: 15px;
+}
+
+.date-option:hover,
+.date-option.is-selected,
+.calendar-day.is-selected {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: white;
+}
+
+.date-option.is-selected strong {
+    color: var(--lime);
+}
+
+.date-option:hover strong {
+    color: var(--lime);
+}
+
+.calendar-toggle {
+    margin-top: 12px;
+    padding: 5px 0;
+    border: 0;
+    background: transparent;
+    color: #496438;
+    font: 600 12px var(--font-body);
+    cursor: pointer;
+}
+
+.booking-calendar {
+    max-width: 390px;
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid #e1e6dc;
+    background: #fbfcf9;
+}
+
+.booking-calendar[hidden] {
+    display: none;
+}
+
+.calendar-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    text-transform: capitalize;
+}
+
+.calendar-heading button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e1e6dc;
+    background: white;
+    color: var(--ink);
+    font: 22px var(--font-body);
+    cursor: pointer;
+}
+
+.calendar-heading button:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+.calendar-weekdays,
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+    text-align: center;
+}
+
+.calendar-weekdays {
+    margin-bottom: 6px;
+    color: #7a847c;
+    font-size: 10px;
+}
+
+.calendar-days button {
+    aspect-ratio: 1;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink);
+    font: 12px var(--font-body);
+    cursor: pointer;
+}
+
+.calendar-days button:hover:not(:disabled) {
+    border-color: #9eb77b;
+}
+
+.calendar-days button:disabled {
+    color: #c0c5bf;
+    cursor: default;
+}
+
+.calendar-days button.is-selected {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--lime);
 }
 
 .booking-notice,

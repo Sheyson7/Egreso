@@ -10,10 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 try {
     $court = (int) ($_GET['court'] ?? 1);
     $date = (string) ($_GET['date'] ?? '');
+    $duration = (int) ($_GET['duration'] ?? 1);
     json_response([
-        'hours' => available_hours($court, $date),
+        'hours' => available_hours($court, $date, $duration),
         'price' => booking_price(),
-        'deposit' => booking_deposit(),
+        'total' => booking_price() * max(1, min(8, $duration)),
+        'deposit' => booking_deposit_for(max(1, min(8, $duration))),
         'loggedIn' => isset($_SESSION['user']),
     ]);
 } catch (Throwable $error) {

@@ -4,8 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../src/reservations.php';
 
 $pageTitle = 'Seberih | Fútbol, amigos y buenos momentos';
-$currentDate = (new DateTimeImmutable())->format('Y-m-d');
-$minimumDate = htmlspecialchars($currentDate, ENT_QUOTES, 'UTF-8');
 $user = $_SESSION['user'] ?? null;
 $notice = take_flash();
 ?>
@@ -79,9 +77,9 @@ $notice = take_flash();
                     TU PRÓXIMO PARTIDO
                 </p>
                 <h2>Reservá tu cancha<span class="accent-dot">.</span></h2>
-                <p>Elegí el día y el horario que mejor le quede al equipo.</p>
+                <p>Elegí la fecha, el horario y cuántas horas quieren jugar.</p>
             </div>
-            <form class="booking-card" id="booking-form" data-logged-in="<?= $user ? 'true' : 'false' ?>" data-csrf="<?= e(csrf_token()) ?>">
+            <form class="booking-card" id="booking-form" data-logged-in="<?= $user ? 'true' : 'false' ?>" data-csrf="<?= e(csrf_token()) ?>" data-date-max="<?= e(booking_date_limit()->format('Y-m-d')) ?>" data-hourly-price="<?= booking_price() ?>" data-deposit-percent="<?= (int) config('BOOKING_DEPOSIT_PERCENT', '15') ?>">
                 <?php if ($notice): ?>
                     <p class="booking-notice <?= e($notice['type']) ?>" role="status"><?= e($notice['message']) ?></p>
                 <?php endif; ?>
@@ -95,17 +93,40 @@ $notice = take_flash();
                         </select>
                     </div>
                 </div>
+                <div class="field-group date-select-field">
+                    <label>FECHA DEL PARTIDO</label>
+                    <p class="selected-date-label" id="selected-date-label">Elegí un día</p>
+                    <div class="date-quick-options" id="date-quick-options" role="group" aria-label="Próximos días"></div>
+                    <button class="calendar-toggle" id="date-calendar-toggle" type="button" aria-expanded="false" aria-controls="date-calendar">
+                        Ver otras fechas <span aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="booking-calendar" id="date-calendar" hidden>
+                        <div class="calendar-heading">
+                            <button type="button" id="calendar-previous" aria-label="Mes anterior">‹</button>
+                            <strong id="calendar-month" aria-live="polite"></strong>
+                            <button type="button" id="calendar-next" aria-label="Mes siguiente">›</button>
+                        </div>
+                        <div class="calendar-weekdays" aria-hidden="true">
+                            <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sá</span><span>Do</span>
+                        </div>
+                        <div class="calendar-days" id="calendar-days" role="group" aria-label="Días del mes"></div>
+                    </div>
+                    <input id="date" name="date" type="hidden">
+                </div>
                 <div class="field-group">
-                    <label for="date">FECHA</label>
+                    <label for="duration">DURACIÓN</label>
                     <div class="input-wrap">
-                        <span class="input-icon" aria-hidden="true">▣</span>
-                        <input
-                            id="date"
-                            name="date"
-                            type="date"
-                            min="<?= $minimumDate ?>"
-                            required
-                        >
+                        <span class="input-icon" aria-hidden="true">◷</span>
+                        <select id="duration" name="duration" required>
+                            <option value="1">1 hora</option>
+                            <option value="2">2 horas</option>
+                            <option value="3">3 horas</option>
+                            <option value="4">4 horas</option>
+                            <option value="5">5 horas</option>
+                            <option value="6">6 horas</option>
+                            <option value="7">7 horas</option>
+                            <option value="8">8 horas</option>
+                        </select>
                     </div>
                 </div>
                 <div class="field-group">
@@ -122,6 +143,7 @@ $notice = take_flash();
                 </button>
                 <div class="booking-summary" aria-live="polite">
                     <span>Valor por hora <strong id="booking-price">$ 1.200 UYU</strong></span>
+                    <span>Total de la cancha <strong id="booking-total">$ 1.200 UYU</strong></span>
                     <span>Seña para confirmar (15%) <strong id="booking-deposit">$ 180 UYU</strong></span>
                 </div>
                 <p class="form-note" id="form-message" aria-live="polite">La seña confirma el turno; el saldo se paga en el complejo.</p>

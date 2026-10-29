@@ -18,6 +18,7 @@ try {
         (int) ($_POST['court'] ?? 0),
         trim((string) ($_POST['date'] ?? '')),
         trim((string) ($_POST['time'] ?? '')),
+        (int) ($_POST['duration'] ?? 1),
     );
     json_response(['redirect' => $redirect]);
 } catch (DomainException $error) {
