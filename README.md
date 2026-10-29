@@ -1,6 +1,6 @@
 # Seberih
 
-Primera versión visual del sitio web del complejo deportivo Seberih.
+Primera versión visual del sitio web del complejo deportivo Seberih, con fotografías reales optimizadas en `public/assets/images/`.
 
 ## Requisitos
 
