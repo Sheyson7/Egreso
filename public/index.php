@@ -114,7 +114,8 @@ $currentDate = (new DateTimeImmutable())->format('Y-m-d');
                 <p class="eyebrow"><span class="eyebrow-line"></span> NOS ENCONTRAMOS EN SAUCE</p>
                 <h2>El fútbol queda<br><span>más cerca.</span></h2>
                 <p>Seberih, un punto de encuentro para disfrutar el fútbol con amigos.</p>
-                <div class="location-detail"><span class="pin-icon" aria-hidden="true">⌖</span><span><strong>Complejo Seberih</strong><br>Sauce, Canelones</span></div>
+                <div class="location-detail"><span class="pin-icon" aria-hidden="true">⌖</span><span><strong>Complejo Seberih</strong><br>8WRQ+2F6, Sauce, Canelones<br><small class="location-coordinates">34°39′35.8″S · 56°03′40.9″W</small></span></div>
+                <a class="button button-dark location-cta" href="https://maps.app.goo.gl/6TYvRfkU8ybxck2D9?g_st=iw" target="_blank" rel="noopener noreferrer">Cómo llegar <span aria-hidden="true">↗</span></a>
             </div>
             <div class="location-visual" aria-label="Ilustración de ubicación del complejo"><div class="map-grid"></div><div class="map-road road-one"></div><div class="map-road road-two"></div><div class="map-pin"><span>S</span></div><span class="map-label">SEBERIH</span></div>
         </section>
