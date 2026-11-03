@@ -72,7 +72,7 @@ function available_hours(int $courtId, string $date, int $duration = 1): array
          FROM reservation_slots s
          JOIN reservations r ON r.id = s.reservation_id
          WHERE s.court_id = ? AND DATE(s.slot_start) = ?
-           AND (r.status = 'confirmed' OR (r.status = 'pending_payment' AND r.expires_at > NOW()))"
+           AND (r.status IN ('confirmed', 'demo') OR (r.status = 'pending_payment' AND r.expires_at > NOW()))"
     );
     $statement->execute([$courtId, $date]);
     $busy = array_column($statement->fetchAll(), 'slot_time');
@@ -145,8 +145,9 @@ function mercado_pago_request(string $method, string $path, ?array $payload = nu
 
 function start_reservation(array $user, int $courtId, string $date, string $time, int $duration): string
 {
+    $demoMode = booking_demo_mode();
     $siteUrl = config('APP_URL', 'http://localhost:8000');
-    if (!config('MERCADOPAGO_ACCESS_TOKEN') || !config('MERCADOPAGO_WEBHOOK_SECRET') || !str_starts_with($siteUrl, 'https://')) {
+    if (!$demoMode && (!config('MERCADOPAGO_ACCESS_TOKEN') || !config('MERCADOPAGO_WEBHOOK_SECRET') || !str_starts_with($siteUrl, 'https://'))) {
         throw new RuntimeException('Las reservas con pago todavía no están habilitadas: el complejo debe configurar Mercado Pago y publicar el sitio con HTTPS.');
     }
 
@@ -157,6 +158,7 @@ function start_reservation(array $user, int $courtId, string $date, string $time
 
     $reservationId = sprintf('%s-%s-%s-%s-%s', bin2hex(random_bytes(4)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(6)));
     $expiresAt = new DateTimeImmutable('+15 minutes');
+    $status = $demoMode ? 'demo' : 'pending_payment';
     $connection = db();
     $connection->beginTransaction();
     try {
@@ -164,7 +166,7 @@ function start_reservation(array $user, int $courtId, string $date, string $time
         $connection->exec("DELETE s FROM reservation_slots s JOIN reservations r ON r.id = s.reservation_id WHERE r.status = 'expired'");
         $insert = $connection->prepare(
             "INSERT INTO reservations (id, user_id, court_id, starts_at, ends_at, total_amount, deposit_amount, status, expires_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_payment', ?)"
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         $insert->execute([
             $reservationId,
@@ -174,7 +176,8 @@ function start_reservation(array $user, int $courtId, string $date, string $time
             $start->modify("+{$duration} hours")->format('Y-m-d H:i:s'),
             booking_price() * $duration,
             booking_deposit_for($duration),
-            $expiresAt->format('Y-m-d H:i:s'),
+            $status,
+            $demoMode ? null : $expiresAt->format('Y-m-d H:i:s'),
         ]);
         $slotInsert = $connection->prepare('INSERT INTO reservation_slots (court_id, slot_start, reservation_id) VALUES (?, ?, ?)');
         for ($offset = 0; $offset < $duration; $offset++) {
@@ -194,6 +197,10 @@ function start_reservation(array $user, int $courtId, string $date, string $time
             $connection->rollBack();
         }
         throw $error;
+    }
+
+    if ($demoMode) {
+        return site_url('pago.php?estado=demo&reserva=' . rawurlencode($reservationId));
     }
 
     try {

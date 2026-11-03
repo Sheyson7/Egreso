@@ -6,6 +6,7 @@ require_once __DIR__ . '/../src/reservations.php';
 $pageTitle = 'Seberih | Fútbol, amigos y buenos momentos';
 $user = $_SESSION['user'] ?? null;
 $notice = take_flash();
+$demoMode = booking_demo_mode();
 ?>
 <!doctype html>
 <html lang="es">
@@ -83,6 +84,11 @@ $notice = take_flash();
                 <?php if ($notice): ?>
                     <p class="booking-notice <?= e($notice['type']) ?>" role="status"><?= e($notice['message']) ?></p>
                 <?php endif; ?>
+                <?php if ($demoMode): ?>
+                    <p class="booking-notice demo-mode" role="status">
+                        Modo de prueba: la reserva se guardará en esta computadora sin cobrar ahora. En la versión real se deberá pagar la seña del 15% para confirmarla.
+                    </p>
+                <?php endif; ?>
                 <div class="field-group field-select">
                     <label for="court">CANCHA</label>
                     <div class="input-wrap">
@@ -139,14 +145,14 @@ $notice = take_flash();
                     </div>
                 </div>
                 <button class="button button-dark" type="submit">
-                    <?= $user ? 'Pagar seña' : 'Iniciar sesión' ?> <span aria-hidden="true">→</span>
+                    <?= $user ? ($demoMode ? 'Guardar reserva' : 'Pagar seña') : 'Iniciar sesión' ?> <span aria-hidden="true">→</span>
                 </button>
                 <div class="booking-summary" aria-live="polite">
                     <span>Valor por hora <strong id="booking-price">$ 1.200 UYU</strong></span>
                     <span>Total de la cancha <strong id="booking-total">$ 1.200 UYU</strong></span>
                     <span>Seña para confirmar (15%) <strong id="booking-deposit">$ 180 UYU</strong></span>
                 </div>
-                <p class="form-note" id="form-message" aria-live="polite">La seña confirma el turno; el saldo se paga en el complejo.</p>
+                <p class="form-note" id="form-message" aria-live="polite"><?= $demoMode ? 'La seña indicada es solo informativa durante esta prueba; no se realizará un cobro.' : 'La seña confirma el turno; el saldo se paga en el complejo.' ?></p>
                 <?php if ($user): ?>
                     <div class="booking-user">Reserva a nombre de <strong><?= e($user['name']) ?></strong></div>
                 <?php else: ?>

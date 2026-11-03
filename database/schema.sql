@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     total_amount INT UNSIGNED NOT NULL,
     deposit_amount INT UNSIGNED NOT NULL,
     currency CHAR(3) NOT NULL DEFAULT 'UYU',
-    status ENUM('pending_payment', 'confirmed', 'payment_failed', 'expired', 'cancelled') NOT NULL,
+    status ENUM('pending_payment', 'confirmed', 'demo', 'payment_failed', 'expired', 'cancelled') NOT NULL,
     payment_preference_id VARCHAR(100) NULL,
     payment_id VARCHAR(100) NULL,
     expires_at DATETIME NULL,

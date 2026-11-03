@@ -38,6 +38,11 @@ function config(string $key, ?string $default = null): ?string
     return $value === false || $value === '' ? $default : $value;
 }
 
+function booking_demo_mode(): bool
+{
+    return config('APP_ENV', 'local') === 'local' && config('BOOKING_DEMO_MODE', 'false') === 'true';
+}
+
 function db(): PDO
 {
     static $connection;
@@ -63,6 +68,13 @@ function db(): PDO
         }
         foreach (array_filter(array_map('trim', explode(';', $schema))) as $statement) {
             $connection->exec($statement);
+        }
+        $statusType = $connection->query(
+            "SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reservations' AND COLUMN_NAME = 'status'"
+        )->fetchColumn();
+        if (is_string($statusType) && !str_contains($statusType, "'demo'")) {
+            $connection->exec("ALTER TABLE reservations MODIFY status ENUM('pending_payment', 'confirmed', 'demo', 'payment_failed', 'expired', 'cancelled') NOT NULL");
         }
         $schemaReady = true;
     }

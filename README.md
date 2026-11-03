@@ -10,7 +10,7 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 
 ## Preparar el entorno local
 
-1. Copiá `.env.example` a `.env` y completá los datos de la base de datos. El archivo `.env` es local y no se publica en Git.
+1. Copiá `.env.example` a `.env` y completá los datos de la base de datos. El archivo `.env` es local y no se publica en Git. Para probar reservas sin cobrar en esta PC, poné `APP_ENV=local` y `BOOKING_DEMO_MODE=true`.
 2. Creá una base de datos llamada `seberih` y un usuario con permisos para crear tablas dentro de esa base.
 3. Para activar pagos, cargá `MERCADOPAGO_ACCESS_TOKEN` y `MERCADOPAGO_WEBHOOK_SECRET` de la aplicación del complejo. En Mercado Pago configurá notificaciones de pago a `https://tu-dominio/webhook.php` y usá ese mismo dominio en `APP_URL`.
 4. Iniciá el sitio desde la raíz del repositorio:
@@ -25,8 +25,10 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 
 - Tarifa inicial: $ 1.200 UYU por hora y por cancha.
 - Seña inicial: 15% ($ 180 UYU por una hora).
+- Las cuentas y reservas de prueba quedan en la base MariaDB de esta computadora; no se guardan en el navegador ni se suben a GitHub.
 - Una cuenta autenticada puede pedir de una a ocho horas seguidas en una de dos canchas, sujeto al horario de apertura. Cada bloque queda ocupado y la base de datos impide cruzarlo con otra reserva.
 - El turno queda pendiente durante 15 minutos mientras se paga. El sitio verifica la firma de las notificaciones y consulta el pago a Mercado Pago; no usa la página de retorno como prueba de pago.
+- En modo local de prueba (`APP_ENV=local` y `BOOKING_DEMO_MODE=true`), las reservas se guardan en MariaDB en esta computadora y ocupan el horario sin procesar un cobro. La pantalla explica la seña que se deberá pagar para confirmar una reserva real. Mantené `BOOKING_DEMO_MODE=false` en producción.
 - Se puede elegir desde hoy hasta la misma fecha de aquí a tres meses. Hay accesos rápidos a los próximos siete días y un calendario mensual para el resto del período.
 - Horarios iniciales (hora de comienzo): 09:00, 10:00, 11:00, 12:00 y 14:00 a 21:00. Son provisionales y deben ajustarse al horario real del complejo.
 

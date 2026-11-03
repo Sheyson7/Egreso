@@ -17,6 +17,7 @@ try {
         'total' => booking_price() * max(1, min(8, $duration)),
         'deposit' => booking_deposit_for(max(1, min(8, $duration))),
         'loggedIn' => isset($_SESSION['user']),
+        'demoMode' => booking_demo_mode(),
     ]);
 } catch (Throwable $error) {
     error_log($error->__toString());
