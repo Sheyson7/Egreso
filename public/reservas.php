@@ -24,7 +24,7 @@ try {
         }
 
         if ($action === 'cancel') {
-            if (!cancel_demo_reservation($reservationId, $_SESSION['user']['email'])) {
+            if (!cancel_demo_reservation($reservationId, (int) $_SESSION['user']['id'], $_SESSION['user']['email'])) {
                 throw new DomainException('No encontramos una reserva activa asociada a tu cuenta.');
             }
             json_response(['message' => 'Reserva cancelada. El horario quedó libre.']);
@@ -32,6 +32,7 @@ try {
 
         reschedule_demo_reservation(
             $reservationId,
+            (int) $_SESSION['user']['id'],
             $_SESSION['user']['email'],
             (int) ($_POST['court'] ?? 0),
             trim((string) ($_POST['date'] ?? '')),

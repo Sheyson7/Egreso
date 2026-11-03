@@ -14,7 +14,7 @@ try {
     $excludeId = (string) ($_GET['exclude'] ?? '');
     if ($excludeId !== '') {
         $excludedReservation = booking_demo_mode() && isset($_SESSION['user'])
-            ? find_user_demo_reservation($excludeId, $_SESSION['user']['email'])
+            ? find_user_demo_reservation($excludeId, (int) $_SESSION['user']['id'], $_SESSION['user']['email'])
             : null;
         if (!$excludedReservation || ($excludedReservation['status'] ?? '') !== 'demo') {
             $excludeId = '';

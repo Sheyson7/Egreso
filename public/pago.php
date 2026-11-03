@@ -17,7 +17,9 @@ if ($paymentId !== '' && preg_match('/^\d+$/', $paymentId) && isset($_SESSION['u
 if (preg_match('/^[a-f0-9-]{36}$/', $reservationId) && isset($_SESSION['user'])) {
     if (booking_demo_mode()) {
         foreach (all_demo_reservations() as $savedReservation) {
-            if ($savedReservation['id'] === $reservationId && $savedReservation['email'] === $_SESSION['user']['email']) {
+            if ($savedReservation['id'] === $reservationId
+                && (int) ($savedReservation['user_id'] ?? 0) === (int) $_SESSION['user']['id']
+                && $savedReservation['email'] === $_SESSION['user']['email']) {
                 $reservation = $savedReservation;
                 break;
             }

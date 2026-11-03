@@ -41,9 +41,29 @@ function with_demo_reservations(callable $operation): mixed
             if (!is_array($reservations)) {
                 throw new RuntimeException('El archivo local de reservas no contiene datos válidos.');
             }
+            $needsOwnerMigration = false;
+            foreach ($reservations as $reservation) {
+                if (!isset($reservation['user_id']) || (int) $reservation['user_id'] < 1) {
+                    $needsOwnerMigration = true;
+                    break;
+                }
+            }
+            if ($needsOwnerMigration) {
+                $accountIds = [];
+                foreach (db()->query('SELECT id, email FROM users')->fetchAll() as $account) {
+                    $accountIds[strtolower($account['email'])] = (int) $account['id'];
+                }
+                foreach ($reservations as &$reservation) {
+                    if (!isset($reservation['user_id']) || (int) $reservation['user_id'] < 1) {
+                        $reservation['user_id'] = $accountIds[strtolower((string) ($reservation['email'] ?? ''))] ?? 0;
+                    }
+                }
+                unset($reservation);
+                $needsWrite = true;
+            }
         } else {
             $legacyRows = db()->query(
-                "SELECT r.id, r.court_id, r.starts_at, r.ends_at, r.total_amount, r.deposit_amount, r.created_at,
+                "SELECT r.id, r.user_id, r.court_id, r.starts_at, r.ends_at, r.total_amount, r.deposit_amount, r.created_at,
                         TIMESTAMPDIFF(HOUR, r.starts_at, r.ends_at) AS duration,
                         u.full_name, u.email
                  FROM reservations r JOIN users u ON u.id = r.user_id WHERE r.status = 'demo'
@@ -51,6 +71,7 @@ function with_demo_reservations(callable $operation): mixed
             )->fetchAll();
             $reservations = array_map(static fn (array $row): array => [
                 'id' => $row['id'],
+                'user_id' => (int) $row['user_id'],
                 'name' => $row['full_name'],
                 'email' => $row['email'],
                 'court_id' => (int) $row['court_id'],
@@ -94,17 +115,18 @@ function all_demo_reservations(): array
     return with_demo_reservations(static fn (array $reservations): array => [false, $reservations]);
 }
 
-function user_demo_reservations(string $email): array
+function user_demo_reservations(int $userId, string $email): array
 {
     return array_values(array_filter(
         all_demo_reservations(),
-        static fn (array $reservation): bool => strcasecmp((string) ($reservation['email'] ?? ''), $email) === 0,
+        static fn (array $reservation): bool => (int) ($reservation['user_id'] ?? 0) === $userId
+            && strcasecmp((string) ($reservation['email'] ?? ''), $email) === 0,
     ));
 }
 
-function find_user_demo_reservation(string $reservationId, string $email): ?array
+function find_user_demo_reservation(string $reservationId, int $userId, string $email): ?array
 {
-    foreach (user_demo_reservations($email) as $reservation) {
+    foreach (user_demo_reservations($userId, $email) as $reservation) {
         if (($reservation['id'] ?? '') === $reservationId) {
             return $reservation;
         }
@@ -112,13 +134,16 @@ function find_user_demo_reservation(string $reservationId, string $email): ?arra
     return null;
 }
 
-function cancel_demo_reservation(string $reservationId, ?string $ownerEmail = null): bool
+function cancel_demo_reservation(string $reservationId, ?int $ownerUserId = null, ?string $ownerEmail = null): bool
 {
-    return with_demo_reservations(static function (array &$reservations) use ($reservationId, $ownerEmail): array {
+    return with_demo_reservations(static function (array &$reservations) use ($reservationId, $ownerUserId, $ownerEmail): array {
         foreach ($reservations as &$reservation) {
-            $owned = $ownerEmail === null || strcasecmp((string) ($reservation['email'] ?? ''), $ownerEmail) === 0;
+            $owned = $ownerUserId === null
+                || ((int) ($reservation['user_id'] ?? 0) === $ownerUserId
+                    && $ownerEmail !== null
+                    && strcasecmp((string) ($reservation['email'] ?? ''), $ownerEmail) === 0);
             if (($reservation['id'] ?? '') === $reservationId && ($reservation['status'] ?? '') === 'demo' && $owned) {
-                if ($ownerEmail !== null && new DateTimeImmutable($reservation['starts_at']) <= new DateTimeImmutable()) {
+                if ($ownerUserId !== null && new DateTimeImmutable($reservation['starts_at']) <= new DateTimeImmutable()) {
                     throw new DomainException('Ya no se puede cancelar una reserva cuyo horario comenzó.');
                 }
                 $reservation['status'] = 'cancelled';
@@ -131,18 +156,19 @@ function cancel_demo_reservation(string $reservationId, ?string $ownerEmail = nu
     });
 }
 
-function reschedule_demo_reservation(string $reservationId, string $ownerEmail, int $courtId, string $date, string $time, int $duration): bool
+function reschedule_demo_reservation(string $reservationId, int $ownerUserId, string $ownerEmail, int $courtId, string $date, string $time, int $duration): bool
 {
     $start = valid_booking_date($date, $time, $duration);
     if (!$start || $courtId < 1 || $courtId > 2 || !in_array($time, BOOKING_HOURS, true)) {
         throw new DomainException('Ese horario no es válido. Elegí un horario disponible.');
     }
 
-    return with_demo_reservations(static function (array &$reservations) use ($reservationId, $ownerEmail, $courtId, $date, $duration, $start): array {
+    return with_demo_reservations(static function (array &$reservations) use ($reservationId, $ownerUserId, $ownerEmail, $courtId, $date, $duration, $start): array {
         $currentIndex = null;
         foreach ($reservations as $index => $reservation) {
             if (($reservation['id'] ?? '') === $reservationId
                 && ($reservation['status'] ?? '') === 'demo'
+                && (int) ($reservation['user_id'] ?? 0) === $ownerUserId
                 && strcasecmp((string) ($reservation['email'] ?? ''), $ownerEmail) === 0) {
                 $currentIndex = $index;
                 break;
@@ -201,6 +227,7 @@ function create_demo_reservation(array $user, int $courtId, string $date, string
 
         $reservations[] = [
             'id' => $reservationId,
+            'user_id' => (int) $user['id'],
             'name' => (string) $user['name'],
             'email' => (string) $user['email'],
             'court_id' => $courtId,

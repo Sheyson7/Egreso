@@ -14,7 +14,7 @@ $notice = take_flash();
 $pageError = null;
 try {
     if (booking_demo_mode()) {
-        $reservations = user_demo_reservations($user['email']);
+        $reservations = user_demo_reservations((int) $user['id'], $user['email']);
     } else {
         $query = db()->prepare(
             'SELECT id, court_id, starts_at, ends_at, total_amount, deposit_amount, currency, status
