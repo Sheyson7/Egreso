@@ -64,6 +64,9 @@ $message = $reservation && $reservation['status'] === 'demo'
             <p>Total: $ <?= number_format((int) $reservation['total_amount'], 0, ',', '.') ?> UYU · Seña real (15%): $ <?= number_format((int) $reservation['deposit_amount'], 0, ',', '.') ?> UYU</p>
         <?php endif; ?>
         <a class="button button-primary" href="/#reservas">Volver a las reservas <span aria-hidden="true">→</span></a>
+        <?php if (isset($_SESSION['user'])): ?>
+            <a href="/mis-reservas.php">Ver mis reservas</a>
+        <?php endif; ?>
     </main>
 </body>
 </html>

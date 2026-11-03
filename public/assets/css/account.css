@@ -349,6 +349,83 @@
     cursor: pointer;
 }
 
+.user-reservations .admin-reservation-details {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.reservation-action-message {
+    min-height: 18px;
+    margin: 16px 0 10px;
+    color: #53644e;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.reservation-edit-fields {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.reservation-edit-fields label {
+    display: grid;
+    gap: 7px;
+    color: #667267;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.reservation-edit-fields select {
+    min-width: 0;
+    height: 43px;
+    padding: 0 10px;
+    border: 1px solid #d9ded7;
+    background: white;
+    color: var(--ink);
+    font: 12px var(--font-body);
+}
+
+.reservation-edit-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 14px;
+    color: #707a72;
+    font-size: 11px;
+}
+
+.reservation-edit-footer strong {
+    color: var(--ink);
+}
+
+.reservation-edit-footer .button {
+    min-height: 42px;
+    font-size: 11px;
+}
+
+.reservation-cancel-form {
+    margin-top: 10px;
+}
+
+.reservation-cancel-form button {
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    color: #853c32;
+    font: 600 11px var(--font-body);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.reservation-cancel-form button:disabled,
+.reservation-edit-footer button:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
 @media (max-width: 640px) {
     .reservation-admin {
         padding: 45px 6% 60px;
@@ -364,6 +441,19 @@
 
     .admin-reservation-details {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reservation-edit-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .reservation-edit-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .reservation-edit-footer .button {
+        width: 100%;
     }
 }
 

@@ -11,8 +11,17 @@ try {
     $court = (int) ($_GET['court'] ?? 1);
     $date = (string) ($_GET['date'] ?? '');
     $duration = (int) ($_GET['duration'] ?? 1);
+    $excludeId = (string) ($_GET['exclude'] ?? '');
+    if ($excludeId !== '') {
+        $excludedReservation = booking_demo_mode() && isset($_SESSION['user'])
+            ? find_user_demo_reservation($excludeId, $_SESSION['user']['email'])
+            : null;
+        if (!$excludedReservation || ($excludedReservation['status'] ?? '') !== 'demo') {
+            $excludeId = '';
+        }
+    }
     json_response([
-        'hours' => available_hours($court, $date, $duration),
+        'hours' => available_hours($court, $date, $duration, $excludeId !== '' ? $excludeId : null),
         'price' => booking_price(),
         'total' => booking_price() * max(1, min(8, $duration)),
         'deposit' => booking_deposit_for(max(1, min(8, $duration))),

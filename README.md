@@ -30,6 +30,7 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 - El turno queda pendiente durante 15 minutos mientras se paga. El sitio verifica la firma de las notificaciones y consulta el pago a Mercado Pago; no usa la página de retorno como prueba de pago.
 - En modo local de prueba (`APP_ENV=local` y `BOOKING_DEMO_MODE=true`), las reservas se guardan en `storage/reservations.json`, ocupan el horario y no generan un cobro. La pantalla explica la seña que se deberá pagar para confirmar una reserva real.
 - El propietario puede revisar las reservas y cancelar una para liberar su horario en `/admin.php`, solo desde la misma computadora. Para llevarlas en un pendrive, copiá ese archivo junto con el proyecto. Una descarga nueva desde GitHub no incluye los datos locales. Mantené `BOOKING_DEMO_MODE=false` en producción.
+- Cada usuario con sesión puede consultar sus reservas de prueba en `/mis-reservas.php`, cambiar cancha, fecha, duración u horario, o cancelar y liberar el turno antes de que comience. Las reservas con pago se muestran, pero sus cambios deben coordinarse con el complejo hasta definir la política de señas y devoluciones.
 - Se puede elegir desde hoy hasta la misma fecha de aquí a tres meses. Hay accesos rápidos a los próximos siete días y un calendario mensual para el resto del período.
 - Horarios iniciales (hora de comienzo): 09:00, 10:00, 11:00, 12:00 y 14:00 a 21:00. Son provisionales y deben ajustarse al horario real del complejo.
 

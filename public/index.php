@@ -38,6 +38,7 @@ $demoMode = booking_demo_mode();
         <nav class="main-nav" aria-label="Navegación principal">
             <a href="#canchas">El complejo</a>
             <a href="#reservas">Reservas</a>
+            <?php if ($user): ?><a href="/mis-reservas.php">Mis reservas</a><?php endif; ?>
             <a href="#ubicacion">Ubicación</a>
             <a href="/cuenta.php"><?= $user ? 'Hola, ' . e($user['name']) : 'Mi cuenta' ?></a>
         </nav>

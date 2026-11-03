@@ -94,11 +94,33 @@ function all_demo_reservations(): array
     return with_demo_reservations(static fn (array $reservations): array => [false, $reservations]);
 }
 
-function cancel_demo_reservation(string $reservationId): bool
+function user_demo_reservations(string $email): array
 {
-    return with_demo_reservations(static function (array &$reservations) use ($reservationId): array {
+    return array_values(array_filter(
+        all_demo_reservations(),
+        static fn (array $reservation): bool => strcasecmp((string) ($reservation['email'] ?? ''), $email) === 0,
+    ));
+}
+
+function find_user_demo_reservation(string $reservationId, string $email): ?array
+{
+    foreach (user_demo_reservations($email) as $reservation) {
+        if (($reservation['id'] ?? '') === $reservationId) {
+            return $reservation;
+        }
+    }
+    return null;
+}
+
+function cancel_demo_reservation(string $reservationId, ?string $ownerEmail = null): bool
+{
+    return with_demo_reservations(static function (array &$reservations) use ($reservationId, $ownerEmail): array {
         foreach ($reservations as &$reservation) {
-            if (($reservation['id'] ?? '') === $reservationId && ($reservation['status'] ?? '') === 'demo') {
+            $owned = $ownerEmail === null || strcasecmp((string) ($reservation['email'] ?? ''), $ownerEmail) === 0;
+            if (($reservation['id'] ?? '') === $reservationId && ($reservation['status'] ?? '') === 'demo' && $owned) {
+                if ($ownerEmail !== null && new DateTimeImmutable($reservation['starts_at']) <= new DateTimeImmutable()) {
+                    throw new DomainException('Ya no se puede cancelar una reserva cuyo horario comenzó.');
+                }
                 $reservation['status'] = 'cancelled';
                 $reservation['cancelled_at'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
                 return [true, true];
@@ -106,6 +128,56 @@ function cancel_demo_reservation(string $reservationId): bool
         }
         unset($reservation);
         return [false, false];
+    });
+}
+
+function reschedule_demo_reservation(string $reservationId, string $ownerEmail, int $courtId, string $date, string $time, int $duration): bool
+{
+    $start = valid_booking_date($date, $time, $duration);
+    if (!$start || $courtId < 1 || $courtId > 2 || !in_array($time, BOOKING_HOURS, true)) {
+        throw new DomainException('Ese horario no es válido. Elegí un horario disponible.');
+    }
+
+    return with_demo_reservations(static function (array &$reservations) use ($reservationId, $ownerEmail, $courtId, $date, $duration, $start): array {
+        $currentIndex = null;
+        foreach ($reservations as $index => $reservation) {
+            if (($reservation['id'] ?? '') === $reservationId
+                && ($reservation['status'] ?? '') === 'demo'
+                && strcasecmp((string) ($reservation['email'] ?? ''), $ownerEmail) === 0) {
+                $currentIndex = $index;
+                break;
+            }
+        }
+        if ($currentIndex === null) {
+            throw new DomainException('No encontramos una reserva activa asociada a tu cuenta.');
+        }
+
+        $current = $reservations[$currentIndex];
+        if (new DateTimeImmutable($current['starts_at']) <= new DateTimeImmutable()) {
+            throw new DomainException('Ya no se puede cambiar una reserva cuyo horario comenzó.');
+        }
+
+        $end = $start->modify("+{$duration} hours");
+        foreach ($reservations as $other) {
+            if (($other['status'] ?? '') !== 'demo'
+                || ($other['id'] ?? '') === $reservationId
+                || (int) ($other['court_id'] ?? 0) !== $courtId
+                || substr((string) $other['starts_at'], 0, 10) !== $date) {
+                continue;
+            }
+            if ($start->format('Y-m-d H:i:s') < $other['ends_at'] && $other['starts_at'] < $end->format('Y-m-d H:i:s')) {
+                throw new DomainException('Ese nuevo horario acaba de ocuparse. Elegí otro disponible.');
+            }
+        }
+
+        $reservations[$currentIndex]['court_id'] = $courtId;
+        $reservations[$currentIndex]['starts_at'] = $start->format('Y-m-d H:i:s');
+        $reservations[$currentIndex]['ends_at'] = $end->format('Y-m-d H:i:s');
+        $reservations[$currentIndex]['duration'] = $duration;
+        $reservations[$currentIndex]['total_amount'] = booking_price() * $duration;
+        $reservations[$currentIndex]['deposit_amount'] = booking_deposit_for($duration);
+        $reservations[$currentIndex]['updated_at'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+        return [true, true];
     });
 }
 
@@ -188,17 +260,20 @@ function valid_booking_date(string $date, string $time, int $duration = 1): ?Dat
     return $start;
 }
 
-function available_hours(int $courtId, string $date, int $duration = 1): array
+function available_hours(int $courtId, string $date, int $duration = 1, ?string $excludeReservationId = null): array
 {
     if ($courtId < 1 || $courtId > 2 || $duration < 1 || $duration > 8 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         return [];
     }
 
     if (booking_demo_mode()) {
-        $busy = with_demo_reservations(static function (array $reservations) use ($courtId, $date): array {
+        $busy = with_demo_reservations(static function (array $reservations) use ($courtId, $date, $excludeReservationId): array {
             $slots = [];
             foreach ($reservations as $reservation) {
-                if (($reservation['status'] ?? '') !== 'demo' || (int) ($reservation['court_id'] ?? 0) !== $courtId || substr((string) $reservation['starts_at'], 0, 10) !== $date) {
+                if (($reservation['status'] ?? '') !== 'demo'
+                    || ($reservation['id'] ?? '') === $excludeReservationId
+                    || (int) ($reservation['court_id'] ?? 0) !== $courtId
+                    || substr((string) $reservation['starts_at'], 0, 10) !== $date) {
                     continue;
                 }
                 $slot = new DateTimeImmutable($reservation['starts_at']);

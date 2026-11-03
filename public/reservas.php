@@ -13,6 +13,34 @@ if (!isset($_SESSION['user'])) {
 }
 
 try {
+    $action = (string) ($_POST['action'] ?? 'create');
+    if ($action === 'cancel' || $action === 'reschedule') {
+        if (!booking_demo_mode()) {
+            json_response(['error' => 'Las reservas con pago se gestionan directamente con el complejo por ahora.'], 409);
+        }
+        $reservationId = trim((string) ($_POST['reservation_id'] ?? ''));
+        if (!preg_match('/^[a-f0-9-]{36}$/', $reservationId)) {
+            throw new DomainException('La reserva seleccionada no es válida.');
+        }
+
+        if ($action === 'cancel') {
+            if (!cancel_demo_reservation($reservationId, $_SESSION['user']['email'])) {
+                throw new DomainException('No encontramos una reserva activa asociada a tu cuenta.');
+            }
+            json_response(['message' => 'Reserva cancelada. El horario quedó libre.']);
+        }
+
+        reschedule_demo_reservation(
+            $reservationId,
+            $_SESSION['user']['email'],
+            (int) ($_POST['court'] ?? 0),
+            trim((string) ($_POST['date'] ?? '')),
+            trim((string) ($_POST['time'] ?? '')),
+            (int) ($_POST['duration'] ?? 1),
+        );
+        json_response(['message' => 'Cambios guardados en tu reserva.']);
+    }
+
     $redirect = start_reservation(
         $_SESSION['user'],
         (int) ($_POST['court'] ?? 0),
