@@ -211,6 +211,162 @@
     letter-spacing: 0;
 }
 
+.reservation-admin {
+    max-width: 1050px;
+    min-height: calc(100vh - 152px);
+    margin: 0 auto;
+    padding: 64px 6% 80px;
+}
+
+.reservation-admin > .eyebrow {
+    margin-bottom: 18px;
+}
+
+.reservation-admin > h1 {
+    font-size: clamp(42px, 6vw, 70px);
+    margin-bottom: 15px;
+}
+
+.reservation-admin > h1 span {
+    color: var(--lime);
+}
+
+.admin-intro {
+    max-width: 650px;
+    margin-bottom: 30px;
+    color: #aab5ad;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.admin-intro code {
+    color: var(--lime);
+}
+
+.admin-message,
+.admin-empty {
+    padding: 18px 20px;
+    background: #192d22;
+    color: #dce5dc;
+}
+
+.admin-message.error {
+    color: #ffd5cc;
+}
+
+.admin-message.success {
+    color: #d8f2b5;
+}
+
+.admin-reservations {
+    display: grid;
+    gap: 14px;
+}
+
+.admin-reservation {
+    padding: 22px 24px;
+    background: #f5f5ef;
+    color: var(--ink);
+}
+
+.admin-reservation.is-cancelled {
+    opacity: .68;
+}
+
+.admin-reservation-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.admin-reservation-heading p {
+    margin-bottom: 6px;
+    color: #6c786e;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+}
+
+.admin-reservation-heading h2 {
+    margin: 0;
+    font-size: 23px;
+}
+
+.admin-status {
+    padding: 7px 10px;
+    background: #e4edd9;
+    color: #40582e;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.admin-status.is-cancelled {
+    background: #e9e9e4;
+    color: #687069;
+}
+
+.admin-reservation-details {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+    padding: 14px 0;
+    border-top: 1px solid #dfe3dc;
+    border-bottom: 1px solid #dfe3dc;
+    color: #717b73;
+    font-size: 11px;
+}
+
+.admin-reservation-details strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--ink);
+    font-size: 12px;
+}
+
+.admin-contact {
+    margin: 13px 0 0;
+    font-size: 12px;
+}
+
+.admin-contact a {
+    color: #496438;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.admin-cancel-form {
+    margin-top: 16px;
+}
+
+.admin-cancel-form button {
+    padding: 10px 13px;
+    border: 1px solid #d5d9d1;
+    background: white;
+    color: #853c32;
+    font: 600 11px var(--font-body);
+    cursor: pointer;
+}
+
+@media (max-width: 640px) {
+    .reservation-admin {
+        padding: 45px 6% 60px;
+    }
+
+    .admin-reservation {
+        padding: 18px 16px;
+    }
+
+    .admin-reservation-heading h2 {
+        font-size: 20px;
+    }
+
+    .admin-reservation-details {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
 @media(max-width:760px) {
     .account-header {
         height: 70px;

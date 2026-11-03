@@ -20,6 +20,133 @@ function booking_deposit_for(int $duration): int
     return (int) round(booking_price() * $duration * (int) config('BOOKING_DEPOSIT_PERCENT', '15') / 100);
 }
 
+function with_demo_reservations(callable $operation): mixed
+{
+    $directory = PROJECT_ROOT . '/storage';
+    if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
+        throw new RuntimeException('No se pudo crear la carpeta local para las reservas.');
+    }
+
+    $lock = fopen($directory . '/.reservations.lock', 'c+');
+    if ($lock === false || !flock($lock, LOCK_EX)) {
+        throw new RuntimeException('No se pudo bloquear el archivo de reservas.');
+    }
+
+    try {
+        $path = $directory . '/reservations.json';
+        $needsWrite = !is_file($path);
+        if (!$needsWrite) {
+            $json = file_get_contents($path);
+            $reservations = is_string($json) ? json_decode($json, true) : null;
+            if (!is_array($reservations)) {
+                throw new RuntimeException('El archivo local de reservas no contiene datos válidos.');
+            }
+        } else {
+            $legacyRows = db()->query(
+                "SELECT r.id, r.court_id, r.starts_at, r.ends_at, r.total_amount, r.deposit_amount, r.created_at,
+                        TIMESTAMPDIFF(HOUR, r.starts_at, r.ends_at) AS duration,
+                        u.full_name, u.email
+                 FROM reservations r JOIN users u ON u.id = r.user_id WHERE r.status = 'demo'
+                 ORDER BY r.starts_at"
+            )->fetchAll();
+            $reservations = array_map(static fn (array $row): array => [
+                'id' => $row['id'],
+                'name' => $row['full_name'],
+                'email' => $row['email'],
+                'court_id' => (int) $row['court_id'],
+                'starts_at' => $row['starts_at'],
+                'ends_at' => $row['ends_at'],
+                'duration' => (int) $row['duration'],
+                'total_amount' => (int) $row['total_amount'],
+                'deposit_amount' => (int) $row['deposit_amount'],
+                'status' => 'demo',
+                'created_at' => $row['created_at'],
+            ], $legacyRows);
+        }
+
+        [$changed, $result] = $operation($reservations);
+        if ($changed || $needsWrite) {
+            $encoded = json_encode($reservations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if (!is_string($encoded)) {
+                throw new RuntimeException('No se pudieron preparar las reservas para guardarlas.');
+            }
+            $temporaryPath = $path . '.' . bin2hex(random_bytes(6)) . '.tmp';
+            if (file_put_contents($temporaryPath, $encoded . PHP_EOL, LOCK_EX) === false) {
+                throw new RuntimeException('No se pudo escribir el archivo local de reservas.');
+            }
+            if (!rename($temporaryPath, $path)) {
+                if (!copy($temporaryPath, $path)) {
+                    @unlink($temporaryPath);
+                    throw new RuntimeException('No se pudo actualizar el archivo local de reservas.');
+                }
+                @unlink($temporaryPath);
+            }
+        }
+        return $result;
+    } finally {
+        flock($lock, LOCK_UN);
+        fclose($lock);
+    }
+}
+
+function all_demo_reservations(): array
+{
+    return with_demo_reservations(static fn (array $reservations): array => [false, $reservations]);
+}
+
+function cancel_demo_reservation(string $reservationId): bool
+{
+    return with_demo_reservations(static function (array &$reservations) use ($reservationId): array {
+        foreach ($reservations as &$reservation) {
+            if (($reservation['id'] ?? '') === $reservationId && ($reservation['status'] ?? '') === 'demo') {
+                $reservation['status'] = 'cancelled';
+                $reservation['cancelled_at'] = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+                return [true, true];
+            }
+        }
+        unset($reservation);
+        return [false, false];
+    });
+}
+
+function create_demo_reservation(array $user, int $courtId, string $date, string $time, int $duration, DateTimeImmutable $start): string
+{
+    $reservationId = sprintf('%s-%s-%s-%s-%s', bin2hex(random_bytes(4)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(6)));
+    $end = $start->modify("+{$duration} hours");
+
+    with_demo_reservations(static function (array &$reservations) use ($user, $courtId, $date, $duration, $start, $end, $reservationId): array {
+        foreach ($reservations as $reservation) {
+            if (($reservation['status'] ?? '') !== 'demo' || (int) ($reservation['court_id'] ?? 0) !== $courtId) {
+                continue;
+            }
+            if (substr((string) $reservation['starts_at'], 0, 10) !== $date) {
+                continue;
+            }
+            if ($start->format('Y-m-d H:i:s') < $reservation['ends_at'] && $reservation['starts_at'] < $end->format('Y-m-d H:i:s')) {
+                throw new DomainException('Alguien acaba de tomar parte de ese horario. Elegí otro horario disponible.');
+            }
+        }
+
+        $reservations[] = [
+            'id' => $reservationId,
+            'name' => (string) $user['name'],
+            'email' => (string) $user['email'],
+            'court_id' => $courtId,
+            'starts_at' => $start->format('Y-m-d H:i:s'),
+            'ends_at' => $end->format('Y-m-d H:i:s'),
+            'duration' => $duration,
+            'total_amount' => booking_price() * $duration,
+            'deposit_amount' => booking_deposit_for($duration),
+            'currency' => 'UYU',
+            'status' => 'demo',
+            'created_at' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
+        ];
+        return [true, null];
+    });
+
+    return site_url('pago.php?estado=demo&reserva=' . rawurlencode($reservationId));
+}
+
 function booking_date_limit(): DateTimeImmutable
 {
     $today = new DateTimeImmutable('today');
@@ -67,15 +194,32 @@ function available_hours(int $courtId, string $date, int $duration = 1): array
         return [];
     }
 
-    $statement = db()->prepare(
-        "SELECT DATE_FORMAT(s.slot_start, '%H:%i') AS slot_time
-         FROM reservation_slots s
-         JOIN reservations r ON r.id = s.reservation_id
-         WHERE s.court_id = ? AND DATE(s.slot_start) = ?
-           AND (r.status IN ('confirmed', 'demo') OR (r.status = 'pending_payment' AND r.expires_at > NOW()))"
-    );
-    $statement->execute([$courtId, $date]);
-    $busy = array_column($statement->fetchAll(), 'slot_time');
+    if (booking_demo_mode()) {
+        $busy = with_demo_reservations(static function (array $reservations) use ($courtId, $date): array {
+            $slots = [];
+            foreach ($reservations as $reservation) {
+                if (($reservation['status'] ?? '') !== 'demo' || (int) ($reservation['court_id'] ?? 0) !== $courtId || substr((string) $reservation['starts_at'], 0, 10) !== $date) {
+                    continue;
+                }
+                $slot = new DateTimeImmutable($reservation['starts_at']);
+                while ($slot < new DateTimeImmutable($reservation['ends_at'])) {
+                    $slots[] = $slot->format('H:i');
+                    $slot = $slot->modify('+1 hour');
+                }
+            }
+            return [false, $slots];
+        });
+    } else {
+        $statement = db()->prepare(
+            "SELECT DATE_FORMAT(s.slot_start, '%H:%i') AS slot_time
+             FROM reservation_slots s
+             JOIN reservations r ON r.id = s.reservation_id
+             WHERE s.court_id = ? AND DATE(s.slot_start) = ?
+               AND (r.status = 'confirmed' OR (r.status = 'pending_payment' AND r.expires_at > NOW()))"
+        );
+        $statement->execute([$courtId, $date]);
+        $busy = array_column($statement->fetchAll(), 'slot_time');
+    }
 
     $today = (new DateTimeImmutable('today'))->format('Y-m-d');
     return array_values(array_filter(BOOKING_HOURS, static function (string $hour) use ($date, $today, $busy, $duration): bool {
@@ -156,9 +300,12 @@ function start_reservation(array $user, int $courtId, string $date, string $time
         throw new DomainException('Ese horario no es válido. Elegí otro horario disponible.');
     }
 
+    if ($demoMode) {
+        return create_demo_reservation($user, $courtId, $date, $time, $duration, $start);
+    }
+
     $reservationId = sprintf('%s-%s-%s-%s-%s', bin2hex(random_bytes(4)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(6)));
     $expiresAt = new DateTimeImmutable('+15 minutes');
-    $status = $demoMode ? 'demo' : 'pending_payment';
     $connection = db();
     $connection->beginTransaction();
     try {
@@ -176,8 +323,8 @@ function start_reservation(array $user, int $courtId, string $date, string $time
             $start->modify("+{$duration} hours")->format('Y-m-d H:i:s'),
             booking_price() * $duration,
             booking_deposit_for($duration),
-            $status,
-            $demoMode ? null : $expiresAt->format('Y-m-d H:i:s'),
+            'pending_payment',
+            $expiresAt->format('Y-m-d H:i:s'),
         ]);
         $slotInsert = $connection->prepare('INSERT INTO reservation_slots (court_id, slot_start, reservation_id) VALUES (?, ?, ?)');
         for ($offset = 0; $offset < $duration; $offset++) {
@@ -197,10 +344,6 @@ function start_reservation(array $user, int $courtId, string $date, string $time
             $connection->rollBack();
         }
         throw $error;
-    }
-
-    if ($demoMode) {
-        return site_url('pago.php?estado=demo&reserva=' . rawurlencode($reservationId));
     }
 
     try {

@@ -262,6 +262,9 @@ $demoMode = booking_demo_mode();
                 <button type="submit">Cerrar sesión</button>
             </form>
         <?php endif; ?>
+        <?php if ($demoMode): ?>
+            <a class="admin-link" href="/admin.php">Gestión local</a>
+        <?php endif; ?>
     </footer>
 </body>
 </html>

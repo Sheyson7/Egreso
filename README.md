@@ -25,10 +25,11 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 
 - Tarifa inicial: $ 1.200 UYU por hora y por cancha.
 - Seña inicial: 15% ($ 180 UYU por una hora).
-- Las cuentas y reservas de prueba quedan en la base MariaDB de esta computadora; no se guardan en el navegador ni se suben a GitHub.
+- Las cuentas quedan en la base MariaDB local; las reservas de prueba se guardan en el archivo `storage/reservations.json`. Ninguno de esos datos se sube a GitHub.
 - Una cuenta autenticada puede pedir de una a ocho horas seguidas en una de dos canchas, sujeto al horario de apertura. Cada bloque queda ocupado y la base de datos impide cruzarlo con otra reserva.
 - El turno queda pendiente durante 15 minutos mientras se paga. El sitio verifica la firma de las notificaciones y consulta el pago a Mercado Pago; no usa la página de retorno como prueba de pago.
-- En modo local de prueba (`APP_ENV=local` y `BOOKING_DEMO_MODE=true`), las reservas se guardan en MariaDB en esta computadora y ocupan el horario sin procesar un cobro. La pantalla explica la seña que se deberá pagar para confirmar una reserva real. Mantené `BOOKING_DEMO_MODE=false` en producción.
+- En modo local de prueba (`APP_ENV=local` y `BOOKING_DEMO_MODE=true`), las reservas se guardan en `storage/reservations.json`, ocupan el horario y no generan un cobro. La pantalla explica la seña que se deberá pagar para confirmar una reserva real.
+- El propietario puede revisar las reservas y cancelar una para liberar su horario en `/admin.php`, solo desde la misma computadora. Para llevarlas en un pendrive, copiá ese archivo junto con el proyecto. Una descarga nueva desde GitHub no incluye los datos locales. Mantené `BOOKING_DEMO_MODE=false` en producción.
 - Se puede elegir desde hoy hasta la misma fecha de aquí a tres meses. Hay accesos rápidos a los próximos siete días y un calendario mensual para el resto del período.
 - Horarios iniciales (hora de comienzo): 09:00, 10:00, 11:00, 12:00 y 14:00 a 21:00. Son provisionales y deben ajustarse al horario real del complejo.
 
