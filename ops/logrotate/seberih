@@ -1,0 +1,11 @@
+@PROJECT_DIR@/storage/logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su @DEPLOY_USER@ @DEPLOY_GROUP@
+    create 0640 @DEPLOY_USER@ @DEPLOY_GROUP@
+}

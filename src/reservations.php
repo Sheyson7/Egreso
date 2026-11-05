@@ -3,11 +3,19 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bootstrap.php';
 
-const BOOKING_HOURS = ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
+const BOOKING_HOURS = \App\Domain\Booking\BookingPolicy::OPENING_HOURS;
+
+function booking_policy(): \App\Domain\Booking\BookingPolicy
+{
+    return new \App\Domain\Booking\BookingPolicy(
+        max(1, (int) config('BOOKING_PRICE_PER_HOUR', '1200')),
+        max(1, min(100, (int) config('BOOKING_DEPOSIT_PERCENT', '15'))),
+    );
+}
 
 function booking_price(): int
 {
-    return max(1, (int) config('BOOKING_PRICE_PER_HOUR', '1200'));
+    return booking_policy()->quote(1)['price_per_hour'];
 }
 
 function booking_deposit(): int
@@ -17,97 +25,13 @@ function booking_deposit(): int
 
 function booking_deposit_for(int $duration): int
 {
-    return (int) round(booking_price() * $duration * (int) config('BOOKING_DEPOSIT_PERCENT', '15') / 100);
+    return booking_policy()->quote($duration)['deposit'];
 }
 
 function with_demo_reservations(callable $operation): mixed
 {
-    $directory = PROJECT_ROOT . '/storage';
-    if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
-        throw new RuntimeException('No se pudo crear la carpeta local para las reservas.');
-    }
-
-    $lock = fopen($directory . '/.reservations.lock', 'c+');
-    if ($lock === false || !flock($lock, LOCK_EX)) {
-        throw new RuntimeException('No se pudo bloquear el archivo de reservas.');
-    }
-
-    try {
-        $path = $directory . '/reservations.json';
-        $needsWrite = !is_file($path);
-        if (!$needsWrite) {
-            $json = file_get_contents($path);
-            $reservations = is_string($json) ? json_decode($json, true) : null;
-            if (!is_array($reservations)) {
-                throw new RuntimeException('El archivo local de reservas no contiene datos válidos.');
-            }
-            $needsOwnerMigration = false;
-            foreach ($reservations as $reservation) {
-                if (!isset($reservation['user_id']) || (int) $reservation['user_id'] < 1) {
-                    $needsOwnerMigration = true;
-                    break;
-                }
-            }
-            if ($needsOwnerMigration) {
-                $accountIds = [];
-                foreach (db()->query('SELECT id, email FROM users')->fetchAll() as $account) {
-                    $accountIds[strtolower($account['email'])] = (int) $account['id'];
-                }
-                foreach ($reservations as &$reservation) {
-                    if (!isset($reservation['user_id']) || (int) $reservation['user_id'] < 1) {
-                        $reservation['user_id'] = $accountIds[strtolower((string) ($reservation['email'] ?? ''))] ?? 0;
-                    }
-                }
-                unset($reservation);
-                $needsWrite = true;
-            }
-        } else {
-            $legacyRows = db()->query(
-                "SELECT r.id, r.user_id, r.court_id, r.starts_at, r.ends_at, r.total_amount, r.deposit_amount, r.created_at,
-                        TIMESTAMPDIFF(HOUR, r.starts_at, r.ends_at) AS duration,
-                        u.full_name, u.email
-                 FROM reservations r JOIN users u ON u.id = r.user_id WHERE r.status = 'demo'
-                 ORDER BY r.starts_at"
-            )->fetchAll();
-            $reservations = array_map(static fn (array $row): array => [
-                'id' => $row['id'],
-                'user_id' => (int) $row['user_id'],
-                'name' => $row['full_name'],
-                'email' => $row['email'],
-                'court_id' => (int) $row['court_id'],
-                'starts_at' => $row['starts_at'],
-                'ends_at' => $row['ends_at'],
-                'duration' => (int) $row['duration'],
-                'total_amount' => (int) $row['total_amount'],
-                'deposit_amount' => (int) $row['deposit_amount'],
-                'status' => 'demo',
-                'created_at' => $row['created_at'],
-            ], $legacyRows);
-        }
-
-        [$changed, $result] = $operation($reservations);
-        if ($changed || $needsWrite) {
-            $encoded = json_encode($reservations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-            if (!is_string($encoded)) {
-                throw new RuntimeException('No se pudieron preparar las reservas para guardarlas.');
-            }
-            $temporaryPath = $path . '.' . bin2hex(random_bytes(6)) . '.tmp';
-            if (file_put_contents($temporaryPath, $encoded . PHP_EOL, LOCK_EX) === false) {
-                throw new RuntimeException('No se pudo escribir el archivo local de reservas.');
-            }
-            if (!rename($temporaryPath, $path)) {
-                if (!copy($temporaryPath, $path)) {
-                    @unlink($temporaryPath);
-                    throw new RuntimeException('No se pudo actualizar el archivo local de reservas.');
-                }
-                @unlink($temporaryPath);
-            }
-        }
-        return $result;
-    } finally {
-        flock($lock, LOCK_UN);
-        fclose($lock);
-    }
+    return (new \App\Infrastructure\Persistence\JsonDemoReservationRepository(PROJECT_ROOT . '/storage'))
+        ->transact($operation);
 }
 
 function all_demo_reservations(): array
@@ -248,43 +172,12 @@ function create_demo_reservation(array $user, int $courtId, string $date, string
 
 function booking_date_limit(): DateTimeImmutable
 {
-    $today = new DateTimeImmutable('today');
-    $targetMonth = $today->modify('first day of this month')->modify('+3 months');
-    return $targetMonth->setDate(
-        (int) $targetMonth->format('Y'),
-        (int) $targetMonth->format('m'),
-        min((int) $today->format('j'), (int) $targetMonth->format('t')),
-    );
+    return booking_policy()->maximumBookingDate();
 }
 
 function valid_booking_date(string $date, string $time, int $duration = 1): ?DateTimeImmutable
 {
-    if ($duration < 1 || $duration > 8) {
-        return null;
-    }
-    $start = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date . ' ' . $time);
-    $errors = DateTimeImmutable::getLastErrors();
-    if (!$start || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) || $start->format('Y-m-d H:i') !== $date . ' ' . $time) {
-        return null;
-    }
-
-    $today = new DateTimeImmutable('today');
-    if ($start->setTime(0, 0) < $today || $start->setTime(0, 0) > booking_date_limit()) {
-        return null;
-    }
-
-    for ($hour = 0; $hour < $duration; $hour++) {
-        if (!in_array($start->modify("+{$hour} hours")->format('H:i'), BOOKING_HOURS, true)) {
-            return null;
-        }
-    }
-
-    $end = $start->modify("+{$duration} hours");
-    $closingTime = $start->setTime(22, 0);
-    if ($start <= new DateTimeImmutable('now') || $end > $closingTime) {
-        return null;
-    }
-    return $start;
+    return booking_policy()->validStart($date, $time, $duration);
 }
 
 function available_hours(int $courtId, string $date, int $duration = 1, ?string $excludeReservationId = null): array

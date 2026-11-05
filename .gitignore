@@ -5,3 +5,5 @@
 /storage/*.json.*
 /storage/*.lock
 /storage/*.tmp
+/storage/logs/*.log
+/backups/

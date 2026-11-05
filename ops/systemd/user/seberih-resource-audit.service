@@ -1,0 +1,7 @@
+[Unit]
+Description=Auditoría periódica de recursos de Seberih
+
+[Service]
+Type=oneshot
+WorkingDirectory=@PROJECT_DIR@
+ExecStart=@PROJECT_DIR@/scripts/audit_resources.sh

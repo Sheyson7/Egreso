@@ -3,6 +3,19 @@ declare(strict_types=1);
 
 const PROJECT_ROOT = __DIR__ . '/..';
 
+spl_autoload_register(static function (string $class): void {
+    $prefix = 'App\\';
+    if (!str_starts_with($class, $prefix)) {
+        return;
+    }
+
+    $relativeClass = substr($class, strlen($prefix));
+    $file = __DIR__ . '/' . str_replace('\\', '/', $relativeClass) . '.php';
+    if (is_file($file)) {
+        require_once $file;
+    }
+});
+
 $envPath = PROJECT_ROOT . '/.env';
 if (is_file($envPath)) {
     foreach (file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [] as $line) {
@@ -24,9 +37,11 @@ if (is_file($envPath)) {
 date_default_timezone_set(getenv('APP_TIMEZONE') ?: 'America/Montevideo');
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    ini_set('session.use_strict_mode', '1');
     session_set_cookie_params([
         'httponly' => true,
-        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'secure' => config('SESSION_COOKIE_SECURE', 'false') === 'true'
+            || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
         'samesite' => 'Lax',
     ]);
     session_start();
@@ -45,40 +60,7 @@ function booking_demo_mode(): bool
 
 function db(): PDO
 {
-    static $connection;
-    if ($connection instanceof PDO) {
-        return $connection;
-    }
-
-    $host = config('DB_HOST', '127.0.0.1');
-    $port = config('DB_PORT', '3307');
-    $database = config('DB_NAME', 'seberih');
-    $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
-    $connection = new PDO($dsn, config('DB_USER', 'seberih_app'), config('DB_PASSWORD', ''), [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-    $connection->exec("SET time_zone = '" . (new DateTimeImmutable())->format('P') . "'");
-    static $schemaReady = false;
-    if (!$schemaReady) {
-        $schema = file_get_contents(PROJECT_ROOT . '/database/schema.sql');
-        if ($schema === false) {
-            throw new RuntimeException('No se encontró el esquema de la base de datos.');
-        }
-        foreach (array_filter(array_map('trim', explode(';', $schema))) as $statement) {
-            $connection->exec($statement);
-        }
-        $statusType = $connection->query(
-            "SELECT COLUMN_TYPE FROM information_schema.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reservations' AND COLUMN_NAME = 'status'"
-        )->fetchColumn();
-        if (is_string($statusType) && !str_contains($statusType, "'demo'")) {
-            $connection->exec("ALTER TABLE reservations MODIFY status ENUM('pending_payment', 'confirmed', 'demo', 'payment_failed', 'expired', 'cancelled') NOT NULL");
-        }
-        $schemaReady = true;
-    }
-    return $connection;
+    return \App\Infrastructure\Persistence\PdoConnectionFactory::connection();
 }
 
 function e(string $value): string
@@ -98,6 +80,9 @@ function require_csrf(): void
 {
     $submitted = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     if (!is_string($submitted) || !hash_equals(csrf_token(), $submitted)) {
+        if (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')) {
+            json_response(['error' => 'La sesión venció. Recargá la página e intentá otra vez.'], 419);
+        }
         http_response_code(419);
         exit('La sesión venció. Recargá la página e intentá otra vez.');
     }
@@ -120,7 +105,10 @@ function json_response(array $payload, int $status = 200): never
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store');
-    echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $envelope = $status >= 400
+        ? ['status' => $status, 'data' => null, 'errors' => [(string) ($payload['error'] ?? 'Ocurrió un error.')]]
+        : ['status' => $status, 'data' => $payload, 'errors' => []];
+    echo json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 

@@ -1,0 +1,70 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        APP_UID: ${APP_UID:-33}
+        APP_GID: ${APP_GID:-33}
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:80"
+    environment:
+      APP_URL: ${DOCKER_APP_URL:-http://localhost:8080}
+      APP_TIMEZONE: ${APP_TIMEZONE:-America/Montevideo}
+      APP_ENV: ${APP_ENV:-local}
+      BOOKING_DEMO_MODE: ${BOOKING_DEMO_MODE:-true}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-seberih}
+      DB_USER: ${DB_USER:-seberih_app}
+      DB_PASSWORD: ${DB_PASSWORD:?Definí DB_PASSWORD en .env}
+      BOOKING_PRICE_PER_HOUR: ${BOOKING_PRICE_PER_HOUR:-1200}
+      BOOKING_DEPOSIT_PERCENT: ${BOOKING_DEPOSIT_PERCENT:-15}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+    volumes:
+      - ./storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - seberih-private
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:-seberih}
+      MARIADB_USER: ${DB_USER:-seberih_app}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?Definí DB_PASSWORD en .env}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Definí DB_ROOT_PASSWORD en .env}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - seberih-private
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+networks:
+  seberih-private:
+    driver: bridge
+
+volumes:
+  mariadb_data:

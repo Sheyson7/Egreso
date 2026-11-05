@@ -113,8 +113,9 @@ async function refreshAvailability() {
     try {
         const params = new URLSearchParams({ court: bookingCourt.value, date: bookingDate.value, duration: bookingDuration.value });
         const response = await fetch(`/disponibilidad.php?${params}`, { headers: { Accept: 'application/json' } });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'No se pudo consultar la disponibilidad.');
+        const envelope = await response.json();
+        const result = envelope.data || {};
+        if (!response.ok) throw new Error(envelope.errors?.[0] || 'No se pudo consultar la disponibilidad.');
         if (requestId !== availabilityRequest) return;
 
         bookingTime.replaceChildren(new Option('Elegí un horario', '', true, true));
@@ -177,8 +178,9 @@ bookingForm?.addEventListener('submit', (event) => {
         body: new FormData(bookingForm),
     })
         .then(async (response) => {
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'No se pudo iniciar la reserva.');
+            const envelope = await response.json();
+            const result = envelope.data || {};
+            if (!response.ok) throw new Error(envelope.errors?.[0] || 'No se pudo iniciar la reserva.');
             window.location.href = result.redirect;
         })
         .catch((error) => {

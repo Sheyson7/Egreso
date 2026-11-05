@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+!.env.example
+vendor/
+backups/
+*.log
+storage/*.json
+storage/*.lock
+storage/*.tmp

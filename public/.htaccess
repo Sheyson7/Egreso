@@ -1,0 +1,10 @@
+Options -Indexes
+RewriteEngine On
+
+# Los recursos estáticos se sirven directamente desde public/assets.
+RewriteRule ^assets/.*\.php$ - [F,L,NC]
+RewriteRule ^assets/ - [L]
+
+# Las rutas de la aplicación se despachan desde el único punto de entrada.
+RewriteRule ^index\.php$ - [L]
+RewriteRule ^ index.php [QSA,L]

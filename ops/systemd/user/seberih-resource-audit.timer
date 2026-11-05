@@ -1,0 +1,11 @@
+[Unit]
+Description=Programa la auditoría de recursos de Seberih
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=15min
+Persistent=true
+Unit=seberih-resource-audit.service
+
+[Install]
+WantedBy=timers.target

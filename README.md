@@ -4,9 +4,10 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 
 ## Requisitos
 
-- PHP 8.0 o superior con `curl`, `pdo_mysql`, `openssl` y `iconv`.
+- PHP 8.1 o superior con `curl`, `pdo_mysql`, `openssl` e `iconv`.
 - MariaDB o MySQL.
 - Una URL HTTPS pública para usar los pagos y notificaciones reales de Mercado Pago.
+- Docker Engine y Docker Compose para el entorno contenerizado y los servicios de operación.
 
 ## Preparar el entorno local
 
@@ -16,10 +17,44 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 4. Iniciá el sitio desde la raíz del repositorio:
 
    ```bash
-   php -S localhost:8000 -t public
+   php -S localhost:8000 -t public src/dev-server-router.php
    ```
 
 5. Abrí `http://localhost:8000`. La primera visita crea las tablas requeridas. En un equipo local, las cuentas y disponibilidad funcionan, pero Mercado Pago necesita credenciales válidas y una dirección HTTPS públicamente accesible para completar los pagos y recibir las notificaciones.
+
+## Entorno con Docker Compose
+
+El entorno separa Apache/PHP de MariaDB. El puerto de la base de datos no se publica al host; los servicios se conectan por una red privada y los datos sobreviven a los reinicios en el volumen nombrado `mariadb_data`. El archivo `storage/reservations.json` continúa en una carpeta del host.
+
+1. Si todavía no existe, copiá `.env.example` a `.env` y definí contraseñas propias para `DB_PASSWORD` y `DB_ROOT_PASSWORD`. No subas `.env` a Git.
+2. Revisá la configuración sin imprimir secretos: `docker compose config -q`.
+3. Construí e iniciá los servicios: `docker compose up --build -d`.
+4. Abrí `http://localhost:8080` (o el puerto configurado en `WEB_PORT`).
+5. Para detenerlos conservando los datos: `docker compose down`. No uses `docker compose down -v` salvo que quieras borrar también la base de datos.
+
+MariaDB inicializa `database/schema.sql` al crear el volumen por primera vez. Los errores de PHP y Apache y los registros de acceso quedan en `storage/logs/`.
+
+## Capas de la aplicación
+
+- `src/Domain/`: reglas puras de cuenta y reservas, sin acceso a HTTP ni a PDO.
+- `src/Application/`: casos de uso, como registrar y autenticar una cuenta.
+- `src/Infrastructure/`: adaptadores de persistencia, actualmente el repositorio PDO de usuarios.
+- `src/Controller/`: punto de entrada HTTP y controladores.
+- `src/Views/`: vistas de inicio y cuenta.
+- `public/`: punto de entrada, rutas HTTP y recursos estáticos.
+
+El registro e inicio de sesión usan `fetch()` con respuestas JSON y conservan el envío HTML de respaldo. Los flujos de reserva y disponibilidad ya usan JSON; el almacenamiento de reservas existente se mantuvo para no cambiar la demo.
+
+## Operación en Linux
+
+Los scripts de mantenimiento están en `scripts/`:
+
+- `backup_database.sh`: genera volcados comprimidos de MariaDB y copia el archivo local de reservas demo; conserva 30 días por defecto (`BACKUP_RETENTION_DAYS`).
+- `audit_resources.sh`: agrega uso de disco y estado/consumo de Docker a `storage/logs/resource-audit.log`.
+- `monitor_security.sh`: busca patrones de solicitudes sospechosas en el log de acceso y genera un informe sin guardar credenciales.
+- `provision/init_system.sh`: instala unidades de usuario de systemd para iniciar Compose al arrancar y auditar recursos cada 15 minutos; configura logrotate para conservar 14 rotaciones y activa `loginctl linger`.
+
+En un servidor Linux con systemd, logrotate, sudo y Docker rootless configurado, prepará `.env` y ejecutá `./provision/init_system.sh` como el usuario técnico dedicado (nunca como root). Después de actualizar código, reconstruí e iniciá con `docker compose up --build -d`. El instalador usa `sudo` solo para instalar la regla de logrotate y habilitar el inicio sin sesión interactiva. Configurá `APP_ENV=production`, `BOOKING_DEMO_MODE=false`, `SESSION_COOKIE_SECURE=true`, `APP_URL` con HTTPS y las credenciales reales antes de publicar pagos.
 
 ## Reglas de reserva
 

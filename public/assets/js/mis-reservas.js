@@ -9,6 +9,8 @@ document.querySelectorAll('.user-reservation').forEach((card) => {
     const time = editForm.elements.time;
     const reservationId = editForm.elements.reservation_id.value;
     const message = card.querySelector('.reservation-action-message');
+    const scheduleLabel = card.querySelector('.reservation-schedule');
+    const durationLabel = card.querySelector('.reservation-duration-value');
     let availabilityRequest = 0;
 
     async function refreshAvailability() {
@@ -25,8 +27,9 @@ document.querySelectorAll('.user-reservation').forEach((card) => {
                 exclude: reservationId,
             });
             const response = await fetch(`/disponibilidad.php?${params}`, { headers: { Accept: 'application/json' } });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'No se pudo consultar la disponibilidad.');
+            const envelope = await response.json();
+            const result = envelope.data || {};
+            if (!response.ok) throw new Error(envelope.errors?.[0] || 'No se pudo consultar la disponibilidad.');
             if (requestId !== availabilityRequest) return;
 
             time.replaceChildren(new Option('Elegí un horario', '', true, true));
@@ -62,9 +65,19 @@ document.querySelectorAll('.user-reservation').forEach((card) => {
                 headers: { Accept: 'application/json' },
                 body: new FormData(editForm),
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'No se pudieron guardar los cambios.');
-            window.location.reload();
+            const envelope = await response.json();
+            const result = envelope.data || {};
+            if (!response.ok) throw new Error(envelope.errors?.[0] || 'No se pudieron guardar los cambios.');
+
+            const startAt = new Date(`${date.value}T${time.value}:00`);
+            const endAt = new Date(startAt);
+            endAt.setHours(endAt.getHours() + Number(duration.value));
+            const dateLabel = new Intl.DateTimeFormat('es-UY', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(startAt);
+            const timeLabel = (value) => new Intl.DateTimeFormat('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false }).format(value);
+            scheduleLabel.textContent = `CANCHA ${court.value} · ${dateLabel} · ${timeLabel(startAt)}–${timeLabel(endAt)}`;
+            durationLabel.textContent = `${duration.value} h`;
+            time.dataset.currentTime = time.value;
+            message.textContent = result.message || 'Cambios guardados.';
         } catch (error) {
             message.textContent = error.message;
             button.disabled = false;
@@ -84,9 +97,17 @@ document.querySelectorAll('.user-reservation').forEach((card) => {
                 headers: { Accept: 'application/json' },
                 body: new FormData(cancelForm),
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.error || 'No se pudo cancelar la reserva.');
-            window.location.reload();
+            const envelope = await response.json();
+            const result = envelope.data || {};
+            if (!response.ok) throw new Error(envelope.errors?.[0] || 'No se pudo cancelar la reserva.');
+            card.classList.add('is-cancelled');
+            const status = card.querySelector('.admin-status');
+            status.textContent = 'Cancelada';
+            status.classList.remove('is-active');
+            status.classList.add('is-cancelled');
+            editForm.remove();
+            cancelForm.remove();
+            message.textContent = result.message || 'Reserva cancelada. El horario quedó libre.';
         } catch (error) {
             message.textContent = error.message;
             button.disabled = false;
