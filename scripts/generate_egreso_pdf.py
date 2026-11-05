@@ -485,7 +485,7 @@ def build_story():
     story.append(make_table(
         ["Integrante", "Responsabilidad documentada"],
         [
-            ["Jason de Castro", "Desarrollo del sistema y trabajo sobre la base de datos, según el acta de avance."],
+            ["Geisson De Castro", "Desarrollo del sistema y trabajo sobre la base de datos, según el acta de avance."],
             ["Gonzalo Ortega", "Coordinación del proyecto y programación junto al responsable de datos."],
             ["Lucas Alfonzo", "Diseño de interfaz y experiencia de usuario; maquetación responsive."],
             ["Alejo Montenegro", "Aseguramiento de calidad, documentación y apoyo en la coordinación de reuniones."],
@@ -757,11 +757,11 @@ def build_story():
     # Page 14 - minutes/glossary.
     story += title("12 | Equipo", "Actas resumidas y glosario", "Se conservaron únicamente los acuerdos que figuran en el borrador proporcionado.")
     story += [h2("Acta N.º 1 - Inicio y definición de roles")]
-    story.append(p("Fecha indicada en el borrador: 10 de mayo de 2026. Asistentes registrados: Gonzalo Ortega, Jason de Castro, Lucas Alfonzo y Alejo Montenegro.", "BodyCompact"))
+    story.append(p("Fecha indicada en el borrador: 10 de mayo de 2026. Asistentes registrados: Gonzalo Ortega, Geisson De Castro, Lucas Alfonzo y Alejo Montenegro.", "BodyCompact"))
     story.append(p("Temas: revisión de pautas de egreso; definición del sistema web de reservas de fútbol 5; asignación inicial de responsabilidades y propuesta de reglamento interno.", "BodyCompact"))
     story.append(p("Acuerdo: comenzar la especificación de requerimientos y mantener el seguimiento del proyecto en actas y repositorio.", "BodyCompact"))
     story += [Spacer(1, 5), h2("Acta N.º 2 - Inicio de programación")]
-    story.append(p("La fecha no está consignada en el borrador. Se acuerda iniciar programación y base de datos; Jason de Castro y Gonzalo Ortega toman tareas de desarrollo y datos; Alejo Montenegro apoya la organización de reuniones y actas.", "BodyCompact"))
+    story.append(p("La fecha no está consignada en el borrador. Se acuerda iniciar programación y base de datos; Geisson De Castro y Gonzalo Ortega toman tareas de desarrollo y datos; Alejo Montenegro apoya la organización de reuniones y actas.", "BodyCompact"))
     story.append(p("Dato a completar por el equipo: fecha, lista de asistentes, decisiones y responsables finales.", "BodySmall"))
     story += [Spacer(1, 8), h2("Glosario")]
     glossary = [
@@ -837,7 +837,7 @@ def draw_cover_text(canvas, doc):
     canvas.drawCentredString(PAGE_W / 2, PAGE_H - 250 * mm, "Escuela Técnica de Sauce | DGETP - UTU")
     canvas.setFont(FONT, 8)
     canvas.drawCentredString(PAGE_W / 2, PAGE_H - 257 * mm, "3.º MB - BT Tecnologías de la Información")
-    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 266 * mm, "Jason de Castro | Gonzalo Ortega | Lucas Alfonzo | Alejo Montenegro")
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 266 * mm, "Geisson De Castro | Gonzalo Ortega | Lucas Alfonzo | Alejo Montenegro")
     canvas.setFillColor(MUTED)
     canvas.setFont(FONT, 7.2)
     canvas.drawCentredString(PAGE_W / 2, 22 * mm, "Documento integral revisado | 5 de noviembre de 2026")
