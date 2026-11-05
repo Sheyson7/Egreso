@@ -1,0 +1,856 @@
+from pathlib import Path
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import (
+    BaseDocTemplate,
+    Flowable,
+    Frame,
+    PageBreak,
+    PageTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+)
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = ROOT / "output" / "pdf" / "Proyecto_Egreso_MateCodeUY_Seberih_2026.pdf"
+PAGE_W, PAGE_H = A4
+NAVY = colors.HexColor("#122B3A")
+INK = colors.HexColor("#18303A")
+TEAL = colors.HexColor("#176B70")
+LIME = colors.HexColor("#C8ED6B")
+GOLD = colors.HexColor("#EAB85A")
+PAPER = colors.HexColor("#F4F6F2")
+PALE = colors.HexColor("#E8EFEB")
+MIST = colors.HexColor("#D7E1DD")
+MUTED = colors.HexColor("#64746F")
+WHITE = colors.white
+RED = colors.HexColor("#A94442")
+
+
+FONT_REGULAR = Path(r"C:\Windows\Fonts\arial.ttf")
+FONT_BOLD = Path(r"C:\Windows\Fonts\arialbd.ttf")
+FONT_ITALIC = Path(r"C:\Windows\Fonts\ariali.ttf")
+if FONT_REGULAR.exists() and FONT_BOLD.exists():
+    pdfmetrics.registerFont(TTFont("ProjectSans", str(FONT_REGULAR)))
+    pdfmetrics.registerFont(TTFont("ProjectSans-Bold", str(FONT_BOLD)))
+    if FONT_ITALIC.exists():
+        pdfmetrics.registerFont(TTFont("ProjectSans-Italic", str(FONT_ITALIC)))
+    FONT = "ProjectSans"
+    FONT_BOLD_NAME = "ProjectSans-Bold"
+    FONT_ITALIC_NAME = "ProjectSans-Italic" if FONT_ITALIC.exists() else "ProjectSans"
+else:
+    FONT = "Helvetica"
+    FONT_BOLD_NAME = "Helvetica-Bold"
+    FONT_ITALIC_NAME = "Helvetica-Oblique"
+
+
+styles = getSampleStyleSheet()
+styles.add(ParagraphStyle(
+    name="BodyProject", parent=styles["BodyText"], fontName=FONT,
+    fontSize=8.7, leading=12.1, textColor=INK, spaceAfter=5,
+))
+styles.add(ParagraphStyle(
+    name="BodyCompact", parent=styles["BodyProject"], fontSize=7.7,
+    leading=10.2, spaceAfter=3,
+))
+styles.add(ParagraphStyle(
+    name="BodySmall", parent=styles["BodyProject"], fontSize=6.8,
+    leading=8.7, spaceAfter=1.5,
+))
+styles.add(ParagraphStyle(
+    name="PageTitle", fontName=FONT_BOLD_NAME, fontSize=21,
+    leading=25, textColor=NAVY, spaceAfter=5,
+))
+styles.add(ParagraphStyle(
+    name="PageSubtitle", fontName=FONT, fontSize=9,
+    leading=12.2, textColor=MUTED, spaceAfter=12,
+))
+styles.add(ParagraphStyle(
+    name="SectionTitle", fontName=FONT_BOLD_NAME, fontSize=12.3,
+    leading=15, textColor=TEAL, spaceBefore=5, spaceAfter=5,
+))
+styles.add(ParagraphStyle(
+    name="Subhead", fontName=FONT_BOLD_NAME, fontSize=9.2,
+    leading=11.5, textColor=NAVY, spaceBefore=3, spaceAfter=3,
+))
+styles.add(ParagraphStyle(
+    name="TableHeader", fontName=FONT_BOLD_NAME, fontSize=7.2,
+    leading=8.5, textColor=WHITE,
+))
+styles.add(ParagraphStyle(
+    name="TableBody", fontName=FONT, fontSize=7.1,
+    leading=9.0, textColor=INK,
+))
+styles.add(ParagraphStyle(
+    name="TableBodySmall", fontName=FONT, fontSize=6.4,
+    leading=7.8, textColor=INK,
+))
+styles.add(ParagraphStyle(
+    name="Callout", fontName=FONT, fontSize=8.3,
+    leading=11.3, textColor=NAVY,
+))
+styles.add(ParagraphStyle(
+    name="CoverKicker", fontName=FONT_BOLD_NAME, fontSize=9,
+    leading=12, textColor=LIME, alignment=TA_CENTER, tracking=1.2,
+))
+styles.add(ParagraphStyle(
+    name="CoverTitle", fontName=FONT_BOLD_NAME, fontSize=26,
+    leading=31, textColor=WHITE, alignment=TA_CENTER,
+))
+styles.add(ParagraphStyle(
+    name="CoverSubtitle", fontName=FONT, fontSize=13,
+    leading=18, textColor=colors.HexColor("#D9E5E1"), alignment=TA_CENTER,
+))
+styles.add(ParagraphStyle(
+    name="CoverMeta", fontName=FONT, fontSize=8.5,
+    leading=13, textColor=INK, alignment=TA_CENTER,
+))
+styles.add(ParagraphStyle(
+    name="Index", fontName=FONT, fontSize=8.1,
+    leading=11.3, textColor=INK,
+))
+styles.add(ParagraphStyle(
+    name="CenteredSmall", fontName=FONT, fontSize=7,
+    leading=9, textColor=MUTED, alignment=TA_CENTER,
+))
+
+
+def p(text, style="BodyProject"):
+    return Paragraph(text, styles[style])
+
+
+def title(section, heading, subtitle=None):
+    result = [p(section.upper(), "BodySmall"), p(heading, "PageTitle")]
+    if subtitle:
+        result.append(p(subtitle, "PageSubtitle"))
+    result.append(Spacer(1, 2))
+    return result
+
+
+def h2(text):
+    return p(text, "SectionTitle")
+
+
+def h3(text):
+    return p(text, "Subhead")
+
+
+def callout(text, background=PALE, accent=TEAL):
+    box = Table([[p(text, "Callout")]], colWidths=[PAGE_W - 2 * 17 * mm])
+    box.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), background),
+        ("BOX", (0, 0), (-1, -1), 0.5, MIST),
+        ("LINEBEFORE", (0, 0), (0, -1), 3, accent),
+        ("LEFTPADDING", (0, 0), (-1, -1), 10),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    return box
+
+
+def make_table(headers, rows, widths, compact=False, row_background=True):
+    header_style = "TableHeader"
+    cell_style = "TableBodySmall" if compact else "TableBody"
+    data = [[p(str(value), header_style) for value in headers]]
+    data.extend([[p(str(value), cell_style) for value in row] for row in rows])
+    table = Table(data, colWidths=widths, repeatRows=1, hAlign="LEFT")
+    commands = [
+        ("BACKGROUND", (0, 0), (-1, 0), NAVY),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+        ("LINEBELOW", (0, 0), (-1, 0), 0.6, TEAL),
+        ("GRID", (0, 1), (-1, -1), 0.35, MIST),
+    ]
+    if row_background:
+        for row_index in range(1, len(data)):
+            if row_index % 2 == 0:
+                commands.append(("BACKGROUND", (0, row_index), (-1, row_index), PAPER))
+    table.setStyle(TableStyle(commands))
+    return table
+
+
+class ArchitectureDiagram(Flowable):
+    def wrap(self, avail_width, avail_height):
+        self.width = avail_width
+        self.height = 215
+        return self.width, self.height
+
+    def draw(self):
+        c = self.canv
+        w = self.width
+        c.setFillColor(PAPER)
+        c.roundRect(0, 0, w, self.height, 10, fill=1, stroke=0)
+        c.setFillColor(NAVY)
+        c.setFont(FONT_BOLD_NAME, 9)
+        c.drawString(12, self.height - 18, "Arquitectura lógica del prototipo")
+
+        boxes = [
+            (12, 68, 94, 94, "CLIENTE", ["Navegador", "HTML / CSS", "JavaScript"]),
+            (130, 38, 176, 145, "APLICACIÓN PHP", ["Apache + PHP 8.3", "Controladores HTTP", "Casos de uso y reglas", "Validación y sesión"]),
+            (337, 101, 145, 76, "DATOS", ["MariaDB 11.4", "Usuarios y pagos"]),
+            (337, 24, 145, 60, "MODO DEMO", ["storage/reservations.json", "Sin cobro en local"]),
+        ]
+        for x, y, bw, bh, label, lines in boxes:
+            color = TEAL if label == "APLICACIÓN PHP" else NAVY
+            c.setFillColor(WHITE)
+            c.setStrokeColor(MIST)
+            c.roundRect(x, y, bw, bh, 7, fill=1, stroke=1)
+            c.setFillColor(color)
+            c.roundRect(x, y + bh - 23, bw, 23, 7, fill=1, stroke=0)
+            c.rect(x, y + bh - 23, bw, 6, fill=1, stroke=0)
+            c.setFillColor(WHITE)
+            c.setFont(FONT_BOLD_NAME, 7.1)
+            c.drawCentredString(x + bw / 2, y + bh - 15, label)
+            c.setFillColor(INK)
+            c.setFont(FONT, 6.5)
+            start_y = y + bh - 36
+            for index, line in enumerate(lines):
+                c.drawCentredString(x + bw / 2, start_y - index * 12, line)
+
+        c.setStrokeColor(GOLD)
+        c.setFillColor(GOLD)
+        c.setLineWidth(1.5)
+        self._arrow(108, 115, 128, 115)
+        self._arrow(307, 133, 335, 143)
+        self._arrow(307, 81, 335, 57)
+        c.setFont(FONT, 6.2)
+        c.setFillColor(MUTED)
+        c.drawCentredString(220, 13, "Entorno local: Docker Compose, red privada y volumen persistente de MariaDB")
+
+    def _arrow(self, x1, y1, x2, y2):
+        c = self.canv
+        c.line(x1, y1, x2, y2)
+        c.saveState()
+        c.translate(x2, y2)
+        angle = __import__("math").atan2(y2 - y1, x2 - x1)
+        c.rotate(angle * 180 / __import__("math").pi)
+        c.line(0, 0, -6, 3)
+        c.line(0, 0, -6, -3)
+        c.restoreState()
+
+
+class EntityDiagram(Flowable):
+    def wrap(self, avail_width, avail_height):
+        self.width = avail_width
+        self.height = 177
+        return self.width, self.height
+
+    def draw(self):
+        c = self.canv
+        w = self.width
+        c.setFillColor(PAPER)
+        c.roundRect(0, 0, w, self.height, 10, fill=1, stroke=0)
+        c.setFillColor(NAVY)
+        c.setFont(FONT_BOLD_NAME, 9)
+        c.drawString(12, self.height - 18, "Modelo de datos implementado")
+        boxes = [
+            (12, 40, 138, 99, "users", ["id (PK)", "full_name, email", "phone, password_hash"]),
+            (182, 25, 186, 123, "reservations", ["id (PK)", "user_id (FK)", "court_id, starts_at, ends_at", "total, deposit, status", "payment ids, expires_at"]),
+            (400, 40, 94, 99, "reservation_slots", ["court_id + slot_start", "(PK compuesta)", "reservation_id (FK)"]),
+        ]
+        for x, y, bw, bh, label, lines in boxes:
+            c.setFillColor(WHITE)
+            c.setStrokeColor(MIST)
+            c.roundRect(x, y, bw, bh, 6, fill=1, stroke=1)
+            c.setFillColor(TEAL)
+            c.roundRect(x, y + bh - 21, bw, 21, 6, fill=1, stroke=0)
+            c.rect(x, y + bh - 21, bw, 5, fill=1, stroke=0)
+            c.setFillColor(WHITE)
+            c.setFont(FONT_BOLD_NAME, 7.3)
+            c.drawCentredString(x + bw / 2, y + bh - 14, label)
+            c.setFillColor(INK)
+            c.setFont(FONT, 6.2)
+            for index, line in enumerate(lines):
+                c.drawCentredString(x + bw / 2, y + bh - 35 - index * 12, line)
+        c.setStrokeColor(GOLD)
+        c.setFillColor(GOLD)
+        c.setLineWidth(1.5)
+        self._arrow(151, 95, 180, 95)
+        self._arrow(370, 95, 398, 95)
+        c.setFont(FONT, 6.2)
+        c.setFillColor(MUTED)
+        c.drawCentredString(165, 104, "1:N")
+        c.drawCentredString(384, 104, "1:N")
+
+    def _arrow(self, x1, y1, x2, y2):
+        c = self.canv
+        c.line(x1, y1, x2, y2)
+        c.line(x2, y2, x2 - 6, y2 + 3)
+        c.line(x2, y2, x2 - 6, y2 - 3)
+
+
+class BookingFlow(Flowable):
+    def wrap(self, avail_width, avail_height):
+        self.width = avail_width
+        self.height = 92
+        return self.width, self.height
+
+    def draw(self):
+        c = self.canv
+        w = self.width
+        labels = [
+            ("01", "Consultar", "cancha, fecha y horas"),
+            ("02", "Validar", "cuenta y disponibilidad"),
+            ("03", "Reservar", "archivo demo o turno pendiente"),
+            ("04", "Confirmar", "sin cobro demo / webhook real"),
+        ]
+        gap = 17
+        bw = (w - gap * 3) / 4
+        for index, (number, heading, body) in enumerate(labels):
+            x = index * (bw + gap)
+            c.setFillColor(PAPER)
+            c.setStrokeColor(MIST)
+            c.roundRect(x, 10, bw, 72, 7, fill=1, stroke=1)
+            c.setFillColor(TEAL if index < 3 else NAVY)
+            c.circle(x + 17, 64, 8, fill=1, stroke=0)
+            c.setFillColor(WHITE)
+            c.setFont(FONT_BOLD_NAME, 5.3)
+            c.drawCentredString(x + 17, 62, number)
+            c.setFillColor(INK)
+            c.setFont(FONT_BOLD_NAME, 7.1)
+            c.drawString(x + 31, 61, heading)
+            c.setFont(FONT, 6.3)
+            c.setFillColor(MUTED)
+            self._wrap_line(body, x + 10, 41, bw - 18)
+            if index < 3:
+                c.setStrokeColor(GOLD)
+                c.setFillColor(GOLD)
+                x1 = x + bw + 2
+                x2 = x + bw + gap - 2
+                c.line(x1, 45, x2, 45)
+                c.line(x2, 45, x2 - 4, 48)
+                c.line(x2, 45, x2 - 4, 42)
+
+    def _wrap_line(self, text, x, y, max_width):
+        c = self.canv
+        words = text.split()
+        line = ""
+        lines = []
+        for word in words:
+            candidate = f"{line} {word}".strip()
+            if pdfmetrics.stringWidth(candidate, FONT, 6.3) <= max_width:
+                line = candidate
+            else:
+                lines.append(line)
+                line = word
+        if line:
+            lines.append(line)
+        for index, item in enumerate(lines[:3]):
+            c.drawCentredString(x + max_width / 2, y - index * 10, item)
+
+
+class ProjectDoc(BaseDocTemplate):
+    def __init__(self, filename):
+        super().__init__(
+            str(filename), pagesize=A4,
+            leftMargin=17 * mm, rightMargin=17 * mm,
+            topMargin=18 * mm, bottomMargin=17 * mm,
+            title="Proyecto de Egreso 2026 - MateCodeUY y Seberih",
+            author="Equipo de Proyecto MateCodeUY",
+            subject="Sistema web de gestión y reservas de canchas de fútbol 5",
+        )
+        frame = Frame(
+            self.leftMargin, self.bottomMargin,
+            self.width, self.height,
+            leftPadding=0, rightPadding=0, topPadding=1, bottomPadding=0,
+            id="main",
+        )
+        self.addPageTemplates(PageTemplate(id="project", frames=[frame], onPage=self._draw_page))
+
+    def _draw_page(self, canvas, doc):
+        canvas.saveState()
+        if doc.page == 1:
+            canvas.setFillColor(NAVY)
+            canvas.rect(0, 0, PAGE_W, PAGE_H, fill=1, stroke=0)
+            canvas.setFillColor(TEAL)
+            canvas.rect(0, 0, PAGE_W, 14 * mm, fill=1, stroke=0)
+            canvas.setFillColor(LIME)
+            canvas.rect(0, PAGE_H - 7 * mm, PAGE_W, 7 * mm, fill=1, stroke=0)
+            canvas.setFillColor(GOLD)
+            canvas.circle(PAGE_W / 2, PAGE_H - 83 * mm, 32 * mm, fill=0, stroke=1)
+            canvas.setLineWidth(2)
+            canvas.setStrokeColor(LIME)
+            canvas.circle(PAGE_W / 2, PAGE_H - 83 * mm, 27 * mm, fill=0, stroke=1)
+            canvas.setFillColor(LIME)
+            canvas.setFont(FONT_BOLD_NAME, 27)
+            canvas.drawCentredString(PAGE_W / 2, PAGE_H - 86 * mm, "MC")
+            canvas.setFont(FONT_BOLD_NAME, 9)
+            canvas.setFillColor(WHITE)
+            canvas.drawCentredString(PAGE_W / 2, PAGE_H - 119 * mm, "MATECODEUY")
+            canvas.setFont(FONT, 7)
+            canvas.setFillColor(colors.HexColor("#C8D8D4"))
+            canvas.drawCentredString(PAGE_W / 2, PAGE_H - 125 * mm, "PROPUESTA ACADÉMICA DE EMPRENDIMIENTO")
+            canvas.setStrokeColor(GOLD)
+            canvas.setLineWidth(1)
+            canvas.line(62 * mm, PAGE_H - 134 * mm, PAGE_W - 62 * mm, PAGE_H - 134 * mm)
+            draw_cover_text(canvas, doc)
+            canvas.restoreState()
+            return
+
+        canvas.setStrokeColor(MIST)
+        canvas.setLineWidth(0.6)
+        canvas.line(self.leftMargin, PAGE_H - 12 * mm, PAGE_W - self.rightMargin, PAGE_H - 12 * mm)
+        canvas.setFont(FONT_BOLD_NAME, 6.8)
+        canvas.setFillColor(TEAL)
+        canvas.drawString(self.leftMargin, PAGE_H - 9 * mm, "MATECODEUY | PROYECTO DE EGRESO 2026")
+        canvas.setFont(FONT, 6.8)
+        canvas.setFillColor(MUTED)
+        canvas.drawRightString(PAGE_W - self.rightMargin, PAGE_H - 9 * mm, "SEBERIH · SAUCE, CANELONES")
+        canvas.line(self.leftMargin, 11 * mm, PAGE_W - self.rightMargin, 11 * mm)
+        canvas.setFont(FONT, 6.5)
+        canvas.setFillColor(MUTED)
+        canvas.drawString(self.leftMargin, 7.5 * mm, "Versión revisada: 5 de noviembre de 2026")
+        canvas.drawRightString(PAGE_W - self.rightMargin, 7.5 * mm, f"Página {doc.page - 1}")
+        canvas.restoreState()
+
+
+def build_story():
+    story = [PageBreak()]
+
+    # Page 2 - document control, summary, contents.
+    story += title("Documento del proyecto", "Ficha y resumen ejecutivo", "Versión revisada para alinear el documento con el prototipo Seberih y el plan técnico de egreso.")
+    story.append(make_table(
+        ["Dato", "Definición"],
+        [
+            ["Institución", "ANEP - DGETP, Escuela Técnica de Sauce, Canelones"],
+            ["Curso", "3.º MB - Bachillerato Tecnológico en Tecnologías de la Información"],
+            ["Año lectivo", "2026"],
+            ["Equipo desarrollador", "MateCodeUY; forma jurídica propuesta: SRL"],
+            ["Cliente piloto", "Complejo deportivo Seberih, Sauce, Canelones"],
+            ["Producto", "Sistema web de gestión y reservas para dos canchas de fútbol 5"],
+        ], [38 * mm, 130 * mm], compact=True,
+    ))
+    story += [Spacer(1, 8), h2("Resumen ejecutivo")]
+    story.append(p(
+        "El proyecto desarrolla un sistema web para que Seberih pueda presentar sus dos canchas, consultar horarios y recibir solicitudes de reserva asociadas a una cuenta. La interfaz se adapta a escritorio, tablet y celular. El equipo trabaja con PHP, MariaDB, HTML, CSS y JavaScript, y empaqueta el entorno de ejecución con Docker Compose."
+    ))
+    story.append(p(
+        "La versión demostrativa guarda usuarios en MariaDB y reservas de prueba en un archivo local. El flujo de prueba no cobra dinero; muestra el anticipo estimado. La integración de Mercado Pago está preparada para un despliegue real, pero requiere credenciales del comercio, HTTPS y verificación de notificaciones antes de confirmar pagos."
+    ))
+    story.append(callout(
+        "Criterio de lectura: este documento describe el alcance existente y separa las funciones de demostración de las pendientes para producción. La SRL se presenta como forma jurídica proyectada para el ejercicio, no como una sociedad ya constituida.",
+        background=colors.HexColor("#F1F5E3"), accent=GOLD,
+    ))
+    story += [Spacer(1, 9), h2("Contenido")]
+    index_rows = [
+        ["01", "Empresa, figura propuesta y equipo", "3"],
+        ["02", "Problema, alcance y personas interesadas", "4"],
+        ["03", "Requerimientos funcionales", "5"],
+        ["04", "Requerimientos de calidad y casos de uso", "6"],
+        ["05", "Riesgos y contingencias", "7"],
+        ["06", "Análisis FODA y viabilidad", "8"],
+        ["07", "Arquitectura de la solución", "9"],
+        ["08", "Datos y persistencia", "10"],
+        ["09", "Reserva y pago: demo y producción", "11"],
+        ["10", "Sistemas operativos y operación", "12"],
+        ["11", "Etapas, aceptación y conclusión", "13"],
+        ["12", "Actas y glosario", "14"],
+        ["13", "Referencias y validaciones previas", "15"],
+    ]
+    story.append(make_table(["N.º", "Sección", "Pág."], index_rows, [14 * mm, 136 * mm, 18 * mm], compact=True))
+    story.append(PageBreak())
+
+    # Page 3 - business, legal status, team.
+    story += title("01 | Identidad", "MateCodeUY y su propuesta empresarial", "Equipo estudiantil que diseña y construye una solución de software para un cliente deportivo local.")
+    story += [h2("Actividad y propuesta de valor"), p(
+        "MateCodeUY es la denominación de trabajo del emprendimiento académico. Su propuesta consiste en analizar procesos de organizaciones locales y desarrollar soluciones web accesibles, seguras y mantenibles. El primer caso de aplicación es la gestión de reservas de canchas para Seberih."
+    ), p(
+        "Misión: acercar herramientas digitales prácticas a pequeñas organizaciones mediante software desarrollado con participación del cliente, documentación clara y una puesta en marcha gradual."
+    ), h2("Forma jurídica proyectada: Sociedad de Responsabilidad Limitada")]
+    story.append(p(
+        "Para el componente de Emprendedurismo, el equipo propone organizar MateCodeUY como una Sociedad de Responsabilidad Limitada (SRL). La denominación <b>MateCodeUY SRL</b> se utiliza en este documento como propuesta académica y queda sujeta a disponibilidad registral. No se afirma que la sociedad esté constituida ni inscripta."
+    ))
+    story.append(p(
+        "La Ventanilla Única de Inversiones de Uruguay describe para una SRL etapas de contrato social e inscripción registral, además de los trámites tributarios y de seguridad social correspondientes. La formalización efectiva debe verificarse con los organismos y asesoramiento profesional vigentes antes de iniciar actividad comercial. [1][2]",
+        "BodyCompact",
+    ))
+    story.append(callout(
+        "Cliente y desarrollador son entidades distintas: Seberih es el complejo deportivo que aporta el contexto de uso; MateCodeUY es el equipo que propone y desarrolla el sistema.",
+        background=PALE,
+    ))
+    story += [Spacer(1, 5), h2("Equipo y responsabilidades del proyecto")]
+    story.append(make_table(
+        ["Integrante", "Responsabilidad documentada"],
+        [
+            ["Jason de Castro", "Desarrollo del sistema y trabajo sobre la base de datos, según el acta de avance."],
+            ["Gonzalo Ortega", "Coordinación del proyecto y programación junto al responsable de datos."],
+            ["Lucas Alfonzo", "Diseño de interfaz y experiencia de usuario; maquetación responsive."],
+            ["Alejo Montenegro", "Aseguramiento de calidad, documentación y apoyo en la coordinación de reuniones."],
+        ], [43 * mm, 125 * mm], compact=True,
+    ))
+    story.append(Spacer(1, 4))
+    story.append(p("Los roles se consolidaron a partir del borrador y sus actas. El equipo debe verificar la grafía oficial de los apellidos y aprobar la asignación antes de entregar.", "BodySmall"))
+    story.append(PageBreak())
+
+    # Page 4 - problem and scope.
+    story += title("02 | Contexto", "Problema, objetivos y alcance", "El alcance se limita a las necesidades del piloto de dos canchas de Seberih.")
+    story += [h2("Problema que se busca atender"), p(
+        "La coordinación manual de turnos puede producir consultas repetidas, confusión sobre quién reservó y dificultades para comprobar la disponibilidad. El sistema propone concentrar en una web la selección de cancha, fecha, duración y estado de cada solicitud."
+    ), h2("Objetivo general"), p(
+        "Construir y documentar un prototipo web adaptable que permita a clientes con cuenta consultar disponibilidad y registrar reservas para las dos canchas de Seberih, con información visible para el usuario y el propietario."
+    ), h2("Objetivos específicos")]
+    story.append(make_table(
+        ["Objetivo", "Resultado esperado"],
+        [
+            ["Acceso", "Registro con nombre y correo, inicio y cierre de sesión."],
+            ["Disponibilidad", "Elección de cancha, fecha dentro de tres meses y duración de una a ocho horas."],
+            ["Reserva", "Validación de horarios y asociación del turno con la cuenta autenticada."],
+            ["Operación", "Demostración local de consulta, cambio y cancelación de reservas de prueba."],
+            ["Preparación", "Base PHP/MariaDB en contenedores, reglas de seguridad y scripts operativos documentados."],
+        ], [34 * mm, 134 * mm], compact=True,
+    ))
+    story += [Spacer(1, 7), h2("Incluido y pendiente")]
+    story.append(make_table(
+        ["Incluido en el prototipo", "Pendiente para producción"],
+        [
+            ["Sitio responsive; cuentas; dos canchas; calendario; selección por horas; reservas demo en archivo local.", "Dominio y HTTPS; credenciales de Mercado Pago; webhook público validado; políticas acordadas de devolución y cancelación."],
+            ["Panel local para revisar reservas demo; administración restringida al entorno de prueba.", "Panel administrativo completo para tarifas, mantenimiento, reportes e ingresos."],
+            ["Entorno Docker Compose con MariaDB persistente y datos locales separados por equipo.", "Definir alojamiento, automatización de respaldos, retención y recuperación ante fallos."],
+        ], [84 * mm, 84 * mm], compact=True,
+    ))
+    story += [Spacer(1, 5), p("Fuera del alcance actual: aplicación móvil nativa, múltiples complejos, analítica financiera avanzada y restablecimiento de contraseña por correo.", "BodySmall")]
+    story.append(PageBreak())
+
+    # Page 5 - functional requirements.
+    story += title("03 | Requerimientos", "Requerimientos funcionales", "La columna de estado distingue lo que ya se puede demostrar de lo que necesita configuración adicional.")
+    functional = [
+        ["RF-01", "Cuenta", "Registrar una cuenta con nombre, correo y contraseña; iniciar y cerrar sesión.", "Prototipo"],
+        ["RF-02", "Canchas", "Permitir consultar y seleccionar una de las dos canchas configuradas.", "Prototipo"],
+        ["RF-03", "Calendario", "Elegir una fecha entre hoy y tres meses desde la fecha actual.", "Prototipo"],
+        ["RF-04", "Duración", "Elegir de una a ocho horas consecutivas, sujeto al horario operativo.", "Prototipo"],
+        ["RF-05", "Disponibilidad", "Consultar horarios libres por cancha, fecha y duración antes de reservar.", "Prototipo"],
+        ["RF-06", "Identidad", "Exigir sesión iniciada y asociar cada reserva a una cuenta concreta.", "Prototipo"],
+        ["RF-07", "Precio", "Mostrar tarifa configurada, total estimado y anticipo del 15 por ciento.", "Prototipo"],
+        ["RF-08", "Demo", "Guardar una reserva de prueba sin cobrar e informar que la seña es ilustrativa.", "Prototipo"],
+        ["RF-09", "Autogestión", "Permitir consultar, cambiar o cancelar reservas demo de la cuenta activa.", "Prototipo"],
+        ["RF-10", "Pago", "Crear el pago de la seña y confirmar el turno después de verificarlo con el proveedor.", "Preparado; activar con credenciales y HTTPS"],
+        ["RF-11", "Gestión local", "Permitir al propietario revisar reservas demo en el entorno local.", "Prototipo"],
+        ["RF-12", "Ubicación", "Mostrar el enlace de ubicación de Seberih para planificar el traslado.", "Prototipo"],
+    ]
+    story.append(make_table(["ID", "Área", "Requisito", "Estado"], functional, [15 * mm, 25 * mm, 101 * mm, 27 * mm], compact=True))
+    story += [Spacer(1, 8), h2("Reglas operativas del prototipo")]
+    story.append(p(
+        "La tarifa de referencia está configurada en $ 1.200 UYU por hora y cancha, y el anticipo estimado en 15 por ciento ($ 180 UYU por hora). Estos valores son parámetros de demostración y deben ser validados por Seberih antes de publicarse."
+    ))
+    story.append(p(
+        "Los horarios de inicio configurados son 09:00, 10:00, 11:00, 12:00 y de 14:00 a 21:00. La duración elegida debe caber en la franja disponible. El cliente debe confirmar el horario comercial real y días de cierre.", "BodyCompact"
+    ))
+    story.append(PageBreak())
+
+    # Page 6 - quality requirements and use cases.
+    story += title("04 | Requerimientos", "Calidad y casos de uso", "Metas que deben verificarse durante el desarrollo y antes de una puesta en producción.")
+    quality = [
+        ["RNF-01", "Adaptabilidad", "La interfaz debe ser legible y operable en celular, tablet y escritorio.", "Diseño implementado; revisión continua."],
+        ["RNF-02", "Seguridad de acceso", "Contraseñas con hash; sesiones protegidas; formularios con token CSRF.", "Aplicado en el prototipo."],
+        ["RNF-03", "Persistencia", "La base relacional usa transacciones InnoDB; los datos de demo se guardan con bloqueo de archivo.", "Implementado en sus modos respectivos."],
+        ["RNF-04", "Integridad de turnos", "Los bloques horarios deben impedir reservas superpuestas para una misma cancha.", "Control de disponibilidad y slots en modo pago; validar con pruebas de carga."],
+        ["RNF-05", "Mantenibilidad", "Separar vistas, controladores, reglas de dominio y persistencia.", "Estructura por capas en migración gradual."],
+        ["RNF-06", "Despliegue", "Usar contenedores separados, red privada para base de datos y volumen persistente.", "Configurado en Compose."],
+        ["RNF-07", "Continuidad", "Documentar respaldo, restauración, registros y permisos mínimos.", "Scripts disponibles; agenda y ensayo de restauración pendientes."],
+        ["RNF-08", "Rendimiento", "Definir y medir tiempos y concurrencia con tráfico representativo.", "Meta por establecer; no hay mediciones certificadas."],
+    ]
+    story.append(make_table(["ID", "Atributo", "Criterio", "Estado"], quality, [16 * mm, 28 * mm, 84 * mm, 40 * mm], compact=True))
+    story += [Spacer(1, 8), h2("Casos de uso prioritarios")]
+    use_cases = [
+        ["CU-01", "Crear cuenta / iniciar sesión", "Cliente", "Nombre y correo válidos; sesión aislada por usuario."],
+        ["CU-02", "Consultar disponibilidad", "Visitante o cliente", "Seleccionar cancha, fecha y duración; consultar bloques libres."],
+        ["CU-03", "Registrar reserva de prueba", "Cliente autenticado", "Validar disponibilidad; guardar como demo sin cobro."],
+        ["CU-04", "Gestionar mis reservas demo", "Cliente autenticado", "Ver, cambiar o cancelar únicamente reservas de la cuenta activa."],
+        ["CU-05", "Pagar seña", "Cliente autenticado", "Pendiente de credenciales, HTTPS y webhook de Mercado Pago."],
+    ]
+    story.append(make_table(["ID", "Caso", "Actor", "Condición / resultado"], use_cases, [16 * mm, 43 * mm, 31 * mm, 78 * mm], compact=True))
+    story.append(PageBreak())
+
+    # Page 7 - risks.
+    story += title("05 | Gestión", "Riesgos y contingencias", "Riesgos vinculados al producto, al entorno local y al paso de demostración a servicio real.")
+    risks = [
+        ["R-01", "La cuenta está en MariaDB local y las reservas demo en un archivo; copiar solo el código no transporta los datos.", "Alta", "Alta", "Documentar respaldo y copia íntegra; probar restauración y migrar a almacenamiento administrado antes de operar."],
+        ["R-02", "Los pagos reales no pueden confirmarse sin credenciales, HTTPS y notificaciones verificables.", "Media", "Alta", "Mantener el modo demo claramente rotulado; activar producción solo tras prueba de webhooks y conciliación."],
+        ["R-03", "Tarifas, horarios, cancelaciones y devoluciones pueden no coincidir con la política de Seberih.", "Media", "Alta", "Obtener validación escrita del cliente y convertirla en reglas visibles y configurables."],
+        ["R-04", "Solicitudes simultáneas pueden competir por un mismo horario.", "Media", "Alta", "Usar transacciones y bloqueo de slots; diseñar pruebas concurrentes antes del piloto público."],
+        ["R-05", "Falla de electricidad, internet, computadora o contenedor local.", "Media", "Media", "Respaldos fuera del equipo, guía de recuperación y monitoreo de disponibilidad."],
+        ["R-06", "Exposición o pérdida de datos de cuentas y reservas.", "Media", "Alta", "Limitar acceso, no versionar secretos, definir retención, aviso de privacidad y proceso de incidentes."],
+        ["R-07", "Desacuerdo de alcance o ausencia de un integrante.", "Media", "Media", "Acordar prioridades con el tutor y cliente; mantener actas, responsables y documentación actualizada."],
+    ]
+    story.append(make_table(["ID", "Riesgo", "Prob.", "Impacto", "Mitigación"], risks, [15 * mm, 69 * mm, 18 * mm, 19 * mm, 47 * mm], compact=True))
+    story += [Spacer(1, 8), h2("Seguimiento")]
+    story.append(p(
+        "El responsable del proyecto revisará riesgos en cada reunión de seguimiento. Los cambios de tarifa, flujo de pago, política de cancelación o datos recopilados requieren acuerdo del cliente y registro en acta antes de desplegarse."
+    ))
+    story.append(callout(
+        "No se presenta el modo de demostración como servicio transaccional: reserva un horario de prueba en el equipo anfitrión, pero no cobra ni sincroniza automáticamente datos con otras computadoras.",
+        background=colors.HexColor("#F9EEE9"), accent=RED,
+    ))
+    story.append(PageBreak())
+
+    # Page 8 - SWOT and viability.
+    story += title("06 | Análisis", "FODA y viabilidad inicial", "Evaluación cualitativa del proyecto en su estado de prototipo.")
+    swot = [
+        ["FORTALEZAS", "OPORTUNIDADES"],
+        ["- Prototipo funcional para dos canchas.\n- Interfaz adaptable y flujo de cuenta.\n- Reglas y persistencia diferenciadas para demo y pago.", "- Validar el flujo con un cliente real.\n- Activar pagos en línea después de acordar condiciones.\n- Adaptar el producto a otros complejos si el piloto funciona."],
+        ["DEBILIDADES", "AMENAZAS"],
+        ["- Persistencia local dividida entre MariaDB y archivo JSON en demo.\n- Pagos reales sin credenciales/HTTPS activos.\n- Panel de administración y reportes limitados.", "- Fallas de red/energía del equipo anfitrión.\n- Dobles reservas o disputas sobre anticipos.\n- Cambios en requisitos del cliente y protección de datos."],
+    ]
+    swot_table = Table(
+        [[p(x, "TableHeader") for x in swot[0]],
+         [p(swot[1][0].replace("\n", "<br/>"), "TableBody"), p(swot[1][1].replace("\n", "<br/>"), "TableBody")],
+         [p(x, "TableHeader") for x in swot[2]],
+         [p(swot[3][0].replace("\n", "<br/>"), "TableBody"), p(swot[3][1].replace("\n", "<br/>"), "TableBody")]],
+        colWidths=[84 * mm, 84 * mm],
+    )
+    swot_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), TEAL),
+        ("BACKGROUND", (0, 2), (-1, 2), NAVY),
+        ("BACKGROUND", (0, 1), (-1, 1), PAPER),
+        ("BACKGROUND", (0, 3), (-1, 3), PAPER),
+        ("GRID", (0, 0), (-1, -1), 0.5, MIST),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 9),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 9),
+        ("TOPPADDING", (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+    ]))
+    story.append(swot_table)
+    story += [Spacer(1, 9), h2("Viabilidad")]
+    viability = [
+        ["Técnica", "La aplicación y el entorno Docker se construyen con tecnologías disponibles y compatibles con el plan PHP/MySQL/Docker. El paso a producción aún requiere validación operativa."],
+        ["Operativa", "Seberih puede revisar el prototipo y validar reglas. El uso sostenido requiere responsable de soporte, respaldo probado, dominio y procedimiento de incidencias."],
+        ["Económica", "El prototipo usa software de código abierto. No hay presupuesto aprobado para alojamiento, dominio, mantenimiento, comisiones de pago ni constitución de la SRL."],
+        ["Comercial", "Existe un cliente piloto mencionado en el proyecto. La demanda y disposición de pago deben confirmarse con el cliente y sus usuarios."],
+    ]
+    story.append(make_table(["Dimensión", "Evaluación"], viability, [32 * mm, 136 * mm], compact=True))
+    story.append(Spacer(1, 5))
+    story.append(p("Conclusión de viabilidad: viable como prototipo académico y piloto controlado; la operación abierta al público queda condicionada a las validaciones indicadas.", "BodyCompact"))
+    story.append(PageBreak())
+
+    # Page 9 - architecture.
+    story += title("07 | Diseño técnico", "Arquitectura de la solución", "MVC y separación por capas sobre una aplicación PHP contenerizada.")
+    story.append(ArchitectureDiagram())
+    story += [Spacer(1, 8), h2("Capas y responsabilidades")]
+    layer_rows = [
+        ["Presentación", "Vistas PHP y recursos HTML, CSS y JavaScript. Captura la selección y muestra disponibilidad, estado y mensajes."],
+        ["Control HTTP", "Front controller y controladores de cuenta, reserva, disponibilidad, gestión local y pagos."],
+        ["Aplicación y dominio", "Autenticación, políticas de reserva, cálculo de tarifa/anticipo y validaciones del negocio."],
+        ["Infraestructura", "Adaptadores PDO para MariaDB y repositorio JSON con bloqueo para las reservas demo."],
+        ["Ejecución", "Apache/PHP y MariaDB en Docker Compose; almacenamiento persistente, red privada y configuración por entorno."],
+    ]
+    story.append(make_table(["Capa", "Responsabilidad"], layer_rows, [37 * mm, 131 * mm], compact=True))
+    story += [Spacer(1, 6), h2("Flujo de una solicitud")]
+    story.append(p(
+        "El navegador consulta disponibilidad mediante JSON. El controlador valida la sesión y los datos; las reglas del dominio revisan fecha, horario y duración; finalmente, la infraestructura guarda el cambio en el repositorio correspondiente. En modo demo no se genera una operación financiera."
+    ))
+    story.append(p("La arquitectura está organizada para una migración gradual: el flujo de reservas conserva funciones de compatibilidad mientras se extraen casos de uso y repositorios.", "BodyCompact"))
+    story.append(PageBreak())
+
+    # Page 10 - DB.
+    story += title("08 | Persistencia", "Modelo de datos", "Entidades basadas en el esquema SQL del repositorio actual.")
+    story.append(EntityDiagram())
+    story += [Spacer(1, 7), h2("Entidades principales")]
+    entities = [
+        ["users", "id, full_name, email único, phone opcional, password_hash y created_at."],
+        ["reservations", "id UUID, user_id, court_id, starts_at, ends_at, importes, moneda, estado, referencias del pago y expiración."],
+        ["reservation_slots", "Clave compuesta (court_id, slot_start) y reservation_id. Hace único cada bloque de una cancha."],
+    ]
+    story.append(make_table(["Entidad", "Datos / integridad"], entities, [42 * mm, 126 * mm], compact=True))
+    story += [Spacer(1, 6), h2("Persistencia por modo")]
+    story.append(make_table(
+        ["Dato", "Demostración local", "Pago en producción"],
+        [
+            ["Cuentas", "MariaDB local", "MariaDB administrada por el despliegue"],
+            ["Reservas", "storage/reservations.json con bloqueo de archivo", "reservations + reservation_slots en MariaDB"],
+            ["Estado", "demo; no representa pago", "pending_payment, confirmed u otros estados controlados"],
+            ["Traslado", "Copiar archivo y base/volumen de forma coordinada", "Respaldos y restauración desde la infraestructura"],
+        ], [33 * mm, 69 * mm, 66 * mm], compact=True,
+    ))
+    story.append(Spacer(1, 5))
+    story.append(p("Las cuentas y las reservas demo no están almacenadas en el mismo soporte. La descarga del código desde GitHub no incluye los datos locales.", "BodySmall"))
+    story.append(PageBreak())
+
+    # Page 11 - booking and payments.
+    story += title("09 | Flujo de reserva", "Demostración local y pago real", "Un mismo flujo de selección con estados distintos según el entorno.")
+    story.append(BookingFlow())
+    story += [Spacer(1, 8), h2("Modo de prueba actual")]
+    story.append(p(
+        "La persona crea una cuenta e inicia sesión antes de reservar. Luego elige una cancha, fecha, duración y horario disponible. El sistema guarda el turno ligado a su cuenta y permite verlo, cambiarlo o cancelarlo mientras siga activo. El texto de interfaz informa que el anticipo es referencial: el modo de prueba no cobra."
+    ))
+    story += [h2("Producción con Mercado Pago")]
+    story.append(make_table(
+        ["Paso", "Control esperado"],
+        [
+            ["1. Crear solicitud", "Bloquear cada bloque horario y crear una reserva pendiente por un plazo limitado."],
+            ["2. Pagar seña", "Enviar al checkout el importe calculado; no pedir ni almacenar datos de tarjeta en la web."],
+            ["3. Verificar", "Validar la firma del webhook y consultar el estado del pago directamente al proveedor."],
+            ["4. Confirmar", "Cambiar el estado únicamente si el pago y el importe recibido coinciden; liberar slots si vence o falla."],
+        ], [39 * mm, 129 * mm], compact=True,
+    ))
+    story += [Spacer(1, 6), callout(
+        "Condiciones previas para activar pagos: acceso a la cuenta comercial de Seberih, token y secreto de webhook, dominio con HTTPS, URL pública de notificaciones, política de cancelación/devolución y pruebas de conciliación.",
+        background=colors.HexColor("#F1F5E3"), accent=GOLD,
+    )]
+    story.append(PageBreak())
+
+    # Page 12 - OS / operations.
+    story += title("10 | Sistemas operativos", "Despliegue y operación", "Docker para el entorno reproducible y Linux como destino de producción propuesto.")
+    story.append(make_table(
+        ["Entorno", "Configuración"],
+        [
+            ["Desarrollo actual", "Windows 11 con Docker Desktop y WSL 2; web local en localhost:8080."],
+            ["Contenedor web", "PHP 8.3 con Apache, extensiones curl y PDO MySQL, reglas de seguridad PHP y ejecución como usuario de servicio."],
+            ["Base de datos", "MariaDB 11.4 en contenedor separado, con volumen nombrado; no publica puerto de base de datos al host."],
+            ["Producción propuesta", "Ubuntu Server 24.04 LTS y Docker rootless, detrás de un dominio con TLS/HTTPS; requiere pruebas en el servidor elegido."],
+        ], [39 * mm, 129 * mm], compact=True,
+    ))
+    story += [Spacer(1, 8), h2("Automatización y mantenimiento")]
+    ops_rows = [
+        ["backup_database.sh", "Comprime un volcado de MariaDB y copia el archivo de reservas demo; conserva una ventana configurable."],
+        ["audit_resources.sh", "Registra uso de disco y consumo/estado de contenedores."],
+        ["monitor_security.sh", "Procesa patrones de solicitudes sospechosas en registros web."],
+        ["systemd user units", "Arranque de Compose y temporizador de auditoría de recursos; instalación prevista con usuario técnico."],
+        ["logrotate", "Rotación de registros para limitar crecimiento del almacenamiento."],
+    ]
+    story.append(make_table(["Elemento", "Propósito / estado"], ops_rows, [42 * mm, 126 * mm], compact=True))
+    story += [Spacer(1, 6), p(
+        "Pendiente operativo: definir y ejecutar un calendario de respaldos independiente del temporizador de auditoría; guardar copias fuera del equipo; documentar recuperación y verificar permisos/retención. No guardar credenciales en el repositorio.",
+        "BodyCompact",
+    )]
+    story.append(PageBreak())
+
+    # Page 13 - roadmap/conclusion.
+    story += title("11 | Plan de trabajo", "Etapas, aceptación y conclusión", "Propuesta para pasar de prototipo escolar a piloto preparado.")
+    roadmap = [
+        ["A", "Prototipo", "Registro, acceso, disponibilidad, reservas demo y vista responsive.", "Demostración en equipo local."],
+        ["B", "Validación de negocio", "Tarifas, horario, reglas de anticipo, cancelación y roles de administración.", "Acta de aprobación de Seberih."],
+        ["C", "Preparación de servidor", "Dominio, HTTPS, variables secretas, Docker rootless, usuarios y almacenamiento.", "Lista de configuración revisada."],
+        ["D", "Pagos", "Checkout, webhook firmado, consulta del pago, vencimiento y conciliación.", "Pago de prueba validado de punta a punta."],
+        ["E", "Seguridad y continuidad", "Pruebas de concurrencia, privacidad, respaldo automático, restauración y monitoreo.", "Informe de pruebas y plan de recuperación."],
+        ["F", "Piloto", "Capacitación del propietario y prueba con usuarios invitados.", "Aprobación antes de abrir al público."],
+    ]
+    story.append(make_table(["Fase", "Etapa", "Trabajo", "Salida"], roadmap, [17 * mm, 34 * mm, 78 * mm, 39 * mm], compact=True))
+    story += [Spacer(1, 8), h2("Criterios mínimos de aceptación del prototipo")]
+    for line in [
+        "Una persona puede crear cuenta e iniciar sesión sin elegir la fecha antes de acceder al formulario.",
+        "Una cuenta autenticada consulta disponibilidad y crea una reserva de prueba asociada a su perfil.",
+        "Al cambiar de cuenta, no se muestran reservas pertenecientes a otra persona.",
+        "El modo demo identifica claramente que no hubo cobro y conserva el estado local de la reserva.",
+        "La página y el proceso de reserva son legibles en dispositivos móviles y escritorio.",
+    ]:
+        story.append(p("- " + line, "BodyCompact"))
+    story += [Spacer(1, 6), h2("Conclusión")]
+    story.append(p(
+        "El producto cubre una necesidad concreta del cliente piloto y ya permite mostrar el recorrido principal de una reserva sin transacción real. Su estructura técnica responde al plan de PHP, base relacional, Docker, MVC y separación por capas. El equipo puede continuar desde una base demostrable, siempre que mantenga explícitos los límites del modo local y complete las validaciones de negocio, pago, seguridad y operación antes de publicarlo."
+    ))
+    story.append(PageBreak())
+
+    # Page 14 - minutes/glossary.
+    story += title("12 | Equipo", "Actas resumidas y glosario", "Se conservaron únicamente los acuerdos que figuran en el borrador proporcionado.")
+    story += [h2("Acta N.º 1 - Inicio y definición de roles")]
+    story.append(p("Fecha indicada en el borrador: 10 de mayo de 2026. Asistentes registrados: Gonzalo Ortega, Jason de Castro, Lucas Alfonzo y Alejo Montenegro.", "BodyCompact"))
+    story.append(p("Temas: revisión de pautas de egreso; definición del sistema web de reservas de fútbol 5; asignación inicial de responsabilidades y propuesta de reglamento interno.", "BodyCompact"))
+    story.append(p("Acuerdo: comenzar la especificación de requerimientos y mantener el seguimiento del proyecto en actas y repositorio.", "BodyCompact"))
+    story += [Spacer(1, 5), h2("Acta N.º 2 - Inicio de programación")]
+    story.append(p("La fecha no está consignada en el borrador. Se acuerda iniciar programación y base de datos; Jason de Castro y Gonzalo Ortega toman tareas de desarrollo y datos; Alejo Montenegro apoya la organización de reuniones y actas.", "BodyCompact"))
+    story.append(p("Dato a completar por el equipo: fecha, lista de asistentes, decisiones y responsables finales.", "BodySmall"))
+    story += [Spacer(1, 8), h2("Glosario")]
+    glossary = [
+        ["ACID", "Propiedades de transacciones para mantener consistencia, aislamiento y durabilidad."],
+        ["Clean Architecture", "Separación de reglas de negocio respecto de interfaces y tecnologías externas."],
+        ["CSRF", "Ataque que intenta enviar acciones usando una sesión autenticada; se mitiga con tokens por formulario."],
+        ["Docker Compose", "Herramienta para declarar y operar varios servicios de contenedores desde un archivo."],
+        ["Webhook", "Notificación de servidor a servidor que comunica un evento, por ejemplo el resultado de un pago."],
+        ["Modo demo", "Entorno local que guarda una reserva de prueba sin confirmar un pago ni conectar usuarios entre equipos."],
+        ["SRL", "Sociedad de Responsabilidad Limitada; en este proyecto se plantea como forma jurídica académica propuesta."],
+    ]
+    story.append(make_table(["Término", "Definición"], glossary, [39 * mm, 129 * mm], compact=True))
+    story.append(PageBreak())
+
+    # Page 15 - sources and validation checklist.
+    story += title("13 | Cierre", "Referencias y validaciones previas", "Fuentes técnicas e institucionales consultadas y datos que el equipo debe confirmar antes de la entrega final.")
+    story += [h2("Referencias")]
+    references = [
+        "[1] Ventanilla Única de Inversiones del Uruguay. (s. f.). <i>Apertura de empresas: Sociedad de Responsabilidad Limitada</i>. <link href='https://vui.gub.uy/procesos/apertura-de-empresas/' color='#176B70'>https://vui.gub.uy/procesos/apertura-de-empresas/</link>.",
+        "[2] Ministerio de Economía y Finanzas del Uruguay. (2019). <i>Sociedades comerciales</i>. <link href='https://www.gub.uy/ministerio-economia-finanzas/institucional/empresas/sociedades-comerciales' color='#176B70'>https://www.gub.uy/ministerio-economia-finanzas/institucional/empresas/sociedades-comerciales</link>.",
+        "[3] ANEP - DGETP. (2026). <i>Pautas del Proyecto de Egreso de 3.º MB - BT Tecnologías de la Información</i>. Material académico proporcionado por el equipo.",
+        "[4] Martin, R. C. (2017). <i>Clean Architecture: A Craftsman's Guide to Software Structure and Design</i>. Prentice Hall.",
+        "[5] Pressman, R. S. (2010). <i>Ingeniería del software: Un enfoque práctico</i> (7.ª ed.). McGraw-Hill.",
+        "[6] Docker, Inc. (s. f.). <i>Docker Compose documentation</i>. <link href='https://docs.docker.com/compose/' color='#176B70'>https://docs.docker.com/compose/</link>.",
+        "[7] Repositorio del sistema de egreso. <i>Esquema SQL, controladores, reglas de dominio, scripts y configuración Compose</i>. Versión de trabajo revisada el 5 de noviembre de 2026.",
+    ]
+    for item in references:
+        story.append(p(item, "BodyCompact"))
+    story += [Spacer(1, 8), h2("Validaciones antes de entregar o desplegar")]
+    checks = [
+        "Confirmar con el tutor el alcance académico y los entregables de cada asignatura.",
+        "Confirmar la forma de nombrar a la empresa, disponibilidad de la denominación y condición real de constitución. El documento solo la plantea como propuesta.",
+        "Verificar nombres y apellidos del equipo; el borrador contiene variantes en el apellido de Lucas y datos distintos sobre integrantes/roles.",
+        "Obtener aprobación de Seberih para tarifa, horarios, anticipo, cancelación, reembolso, aviso de privacidad y datos de contacto.",
+        "Antes de habilitar pagos, probar HTTPS, credenciales, firma de notificaciones y conciliación; realizar un ensayo completo y documentado.",
+        "Acordar calendario de respaldos fuera del equipo local y demostrar una restauración.",
+    ]
+    for item in checks:
+        story.append(p("- " + item, "BodyCompact"))
+    story.append(Spacer(1, 6))
+    story.append(callout(
+        "Estado de esta edición: el texto se reorganizó y se alineó con el prototipo y la planificación disponible. La validación final de nombres, políticas comerciales y constitución empresarial corresponde al equipo, al cliente y al tutor.",
+        background=colors.HexColor("#F1F5E3"), accent=GOLD,
+    ))
+    return story
+
+
+def draw_cover_text(canvas, doc):
+    canvas.saveState()
+    canvas.setFillColor(LIME)
+    canvas.setFont(FONT_BOLD_NAME, 8.5)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 36 * mm, "PROYECTO DE EGRESO | 2026")
+    canvas.setFillColor(WHITE)
+    canvas.setFont(FONT_BOLD_NAME, 22)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 151 * mm, "Sistema web de gestión")
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 162 * mm, "y reservas de canchas")
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 173 * mm, "de fútbol 5")
+    canvas.setFillColor(colors.HexColor("#D9E5E1"))
+    canvas.setFont(FONT, 11)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 189 * mm, "Complejo deportivo Seberih")
+    canvas.setFont(FONT, 9)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 196 * mm, "Sauce, Canelones")
+    canvas.setStrokeColor(GOLD)
+    canvas.line(49 * mm, PAGE_H - 207 * mm, PAGE_W - 49 * mm, PAGE_H - 207 * mm)
+    canvas.setFillColor(WHITE)
+    canvas.setFont(FONT_BOLD_NAME, 9)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 221 * mm, "MateCodeUY")
+    canvas.setFont(FONT, 8)
+    canvas.setFillColor(LIME)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 228 * mm, "SRL propuesta para el ejercicio de Emprendedurismo")
+    canvas.setFillColor(INK)
+    canvas.setFont(FONT_BOLD_NAME, 8.5)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 250 * mm, "Escuela Técnica de Sauce | DGETP - UTU")
+    canvas.setFont(FONT, 8)
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 257 * mm, "3.º MB - BT Tecnologías de la Información")
+    canvas.drawCentredString(PAGE_W / 2, PAGE_H - 266 * mm, "Jason de Castro | Gonzalo Ortega | Lucas Alfonzo | Alejo Montenegro")
+    canvas.setFillColor(MUTED)
+    canvas.setFont(FONT, 7.2)
+    canvas.drawCentredString(PAGE_W / 2, 22 * mm, "Documento integral revisado | 5 de noviembre de 2026")
+    canvas.restoreState()
+
+
+def main():
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    doc = ProjectDoc(OUTPUT)
+    story = build_story()
+    doc.build(story)
+    print(f"Created {OUTPUT}")
+
+
+if __name__ == "__main__":
+    main()
