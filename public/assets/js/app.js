@@ -6,7 +6,11 @@ const bookingTime = bookingForm?.elements.time;
 const bookingDuration = bookingForm?.elements.duration;
 let availabilityRequest = 0;
 
-const toIsoDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+const toIsoDate = (date) => [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+].join('-');
 const dateFromIso = (value) => {
     const [year, month, day] = value.split('-').map(Number);
     return new Date(year, month - 1, day);
@@ -32,7 +36,10 @@ function renderDateOptions() {
         button.type = 'button';
         button.className = `date-option${bookingDate.value === value ? ' is-selected' : ''}`;
         button.setAttribute('aria-pressed', String(bookingDate.value === value));
-        button.innerHTML = `<span>${offset === 0 ? 'Hoy' : new Intl.DateTimeFormat('es-UY', { weekday: 'short' }).format(day)}</span><strong>${day.getDate()}</strong>`;
+        const weekday = offset === 0
+            ? 'Hoy'
+            : new Intl.DateTimeFormat('es-UY', { weekday: 'short' }).format(day);
+        button.innerHTML = `<span>${weekday}</span><strong>${day.getDate()}</strong>`;
         button.addEventListener('click', () => chooseDate(value));
         quickOptions.append(button);
     }
@@ -97,7 +104,9 @@ document.querySelector('#date-calendar-toggle')?.addEventListener('click', (even
     const calendar = document.querySelector('#date-calendar');
     const isExpanded = button.getAttribute('aria-expanded') === 'true';
     button.setAttribute('aria-expanded', String(!isExpanded));
-    button.innerHTML = isExpanded ? 'Ver otras fechas <span aria-hidden="true">⌄</span>' : 'Ocultar calendario <span aria-hidden="true">⌃</span>';
+    button.innerHTML = isExpanded
+        ? 'Ver otras fechas <span aria-hidden="true">⌄</span>'
+        : 'Ocultar calendario <span aria-hidden="true">⌃</span>';
     calendar.hidden = isExpanded;
     if (!isExpanded) renderDateOptions();
 });

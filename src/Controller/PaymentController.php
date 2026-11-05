@@ -31,27 +31,36 @@ final class PaymentController
                     }
                 }
             } else {
-                $query = \db()->prepare('SELECT court_id, starts_at, ends_at, total_amount, deposit_amount, status FROM reservations WHERE id = ? AND user_id = ?');
+                $query = \db()->prepare(
+                    'SELECT court_id, starts_at, ends_at, total_amount, deposit_amount, status '
+                    . 'FROM reservations WHERE id = ? AND user_id = ?',
+                );
                 $query->execute([$reservationId, $_SESSION['user']['id']]);
                 $reservation = $query->fetch() ?: null;
             }
         }
 
-        $message = $reservation && $reservation['status'] === 'demo'
-            ? 'Guardamos esta reserva de prueba en la computadora. No se realizó ningún cobro. En la versión real se deberá pagar la seña del 15% para confirmarla: $ ' . number_format((int) $reservation['deposit_amount'], 0, ',', '.') . ' UYU.'
-            : ($reservation && $reservation['status'] === 'confirmed'
-            ? 'Seña aprobada: tu cancha quedó reservada a tu nombre.'
-            : ($reservation && $reservation['status'] === 'cancelled'
-                ? 'Esta reserva de prueba fue cancelada y el horario quedó libre.'
-            : ($reservation && $reservation['status'] === 'payment_failed'
-                ? 'El pago no fue aprobado. Si el horario sigue libre, podés volver a reservar.'
-                : ($reservation && $reservation['status'] === 'expired'
-                    ? 'El tiempo para pagar venció y el horario se liberó. Volvé a consultar la disponibilidad antes de intentarlo otra vez.'
-                    : match ($state) {
-                        'pendiente' => 'El pago todavía está pendiente. La reserva se confirmará cuando Mercado Pago lo apruebe.',
-                        'rechazado' => 'El pago no fue aprobado. Si el horario sigue libre, podés volver a reservar.',
-                        default => 'Gracias. Estamos verificando el pago con Mercado Pago; la reserva queda confirmada después de esa comprobación.',
-                    }))));
+        if ($reservation !== null) {
+            $message = match ($reservation['status']) {
+                'demo' => 'Guardamos esta reserva de prueba en la computadora. No se realizó ningún cobro. '
+                    . 'En la versión real se deberá pagar la seña del 15% para confirmarla: $ '
+                    . number_format((int) $reservation['deposit_amount'], 0, ',', '.') . ' UYU.',
+                'confirmed' => 'Seña aprobada: tu cancha quedó reservada a tu nombre.',
+                'cancelled' => 'Esta reserva de prueba fue cancelada y el horario quedó libre.',
+                'payment_failed' => 'El pago no fue aprobado. Si el horario sigue libre, podés volver a reservar.',
+                'expired' => 'El tiempo para pagar venció y el horario se liberó. '
+                    . 'Volvé a consultar la disponibilidad antes de intentarlo otra vez.',
+                default => 'Gracias. Estamos verificando el pago con Mercado Pago; '
+                    . 'la reserva queda confirmada después de esa comprobación.',
+            };
+        } else {
+            $message = match ($state) {
+                'pendiente' => 'El pago todavía está pendiente. La reserva se confirmará cuando Mercado Pago lo apruebe.',
+                'rechazado' => 'El pago no fue aprobado. Si el horario sigue libre, podés volver a reservar.',
+                default => 'Gracias. Estamos verificando el pago con Mercado Pago; '
+                    . 'la reserva queda confirmada después de esa comprobación.',
+            };
+        }
 
         require \PROJECT_ROOT . '/src/Views/PaymentResultPage.php';
     }

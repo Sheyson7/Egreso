@@ -47,7 +47,13 @@
                         && ($reservation['status'] ?? '') === 'demo'
                         && new DateTimeImmutable($reservation['starts_at']) > new DateTimeImmutable();
                     $isCancelled = ($reservation['status'] ?? '') === 'cancelled';
-                    $statusLabel = $isCancelled ? 'Cancelada' : ($isDemoActive ? 'Prueba guardada' : (($reservation['status'] ?? '') === 'confirmed' ? 'Confirmada' : (($reservation['status'] ?? '') === 'pending_payment' ? 'Pendiente de pago' : (($reservation['status'] ?? '') === 'demo' ? 'Finalizada' : ucfirst((string) $reservation['status'])))));
+                    $statusLabel = match ($reservation['status'] ?? '') {
+                        'cancelled' => 'Cancelada',
+                        'confirmed' => 'Confirmada',
+                        'pending_payment' => 'Pendiente de pago',
+                        'demo' => $isDemoActive ? 'Prueba guardada' : 'Finalizada',
+                        default => ucfirst((string) ($reservation['status'] ?? '')),
+                    };
                     $startsAt = new DateTimeImmutable($reservation['starts_at']);
                     $dateValue = $startsAt->format('Y-m-d');
                     $duration = (int) ($reservation['duration'] ?? ((new DateTimeImmutable($reservation['ends_at']))->getTimestamp() - $startsAt->getTimestamp()) / 3600);
@@ -58,7 +64,14 @@
                                 <p class="reservation-schedule">CANCHA <?= (int) $reservation['court_id'] ?> · <?= e($startsAt->format('d/m/Y')) ?> · <?= e($startsAt->format('H:i')) ?>–<?= e((new DateTimeImmutable($reservation['ends_at']))->format('H:i')) ?></p>
                                 <h2><?= e($user['name']) ?></h2>
                             </div>
-                            <span class="admin-status <?= $isDemoActive ? 'is-active' : ($isCancelled ? 'is-cancelled' : '') ?>"><?= e($statusLabel) ?></span>
+                            <?php
+                            $statusClass = match (true) {
+                                $isDemoActive => 'is-active',
+                                $isCancelled => 'is-cancelled',
+                                default => '',
+                            };
+                            ?>
+                            <span class="admin-status <?= $statusClass ?>"><?= e($statusLabel) ?></span>
                         </div>
                         <div class="admin-reservation-details">
                             <span>Duración <strong class="reservation-duration-value"><?= $duration ?> h</strong></span>

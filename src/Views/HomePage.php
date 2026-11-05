@@ -81,7 +81,15 @@ $demoMode = booking_demo_mode();
                 <h2>Reservá tu cancha<span class="accent-dot">.</span></h2>
                 <p>Elegí la fecha, el horario y cuántas horas quieren jugar.</p>
             </div>
-            <form class="booking-card" id="booking-form" data-logged-in="<?= $user ? 'true' : 'false' ?>" data-csrf="<?= e(csrf_token()) ?>" data-date-max="<?= e(booking_date_limit()->format('Y-m-d')) ?>" data-hourly-price="<?= booking_price() ?>" data-deposit-percent="<?= (int) config('BOOKING_DEPOSIT_PERCENT', '15') ?>">
+            <form
+                class="booking-card"
+                id="booking-form"
+                data-logged-in="<?= $user ? 'true' : 'false' ?>"
+                data-csrf="<?= e(csrf_token()) ?>"
+                data-date-max="<?= e(booking_date_limit()->format('Y-m-d')) ?>"
+                data-hourly-price="<?= booking_price() ?>"
+                data-deposit-percent="<?= (int) config('BOOKING_DEPOSIT_PERCENT', '15') ?>"
+            >
                 <?php if ($notice): ?>
                     <p class="booking-notice <?= e($notice['type']) ?>" role="status"><?= e($notice['message']) ?></p>
                 <?php endif; ?>

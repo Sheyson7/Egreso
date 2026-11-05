@@ -34,6 +34,12 @@ El entorno separa Apache/PHP de MariaDB. El puerto de la base de datos no se pub
 
 MariaDB inicializa `database/schema.sql` al crear el volumen por primera vez. Los errores de PHP y Apache y los registros de acceso quedan en `storage/logs/`.
 
+### Abrir en Windows con doble clic
+
+- Instala y abre Docker Desktop antes de usar el proyecto por primera vez.
+- Haz doble clic en `Abrir Seberih.bat`. El archivo inicia Docker Compose en modo local de prueba y abre el sitio en el navegador; la primera vez puede tardar mientras se descargan las imágenes.
+- Al copiar el proyecto a otra computadora, copia la carpeta completa para conservar `storage/reservations.json`. Las cuentas se almacenan en el volumen local de MariaDB, así que cada computadora tendrá su propia base de usuarios. GitHub no incluye los datos locales ni el volumen de Docker.
+
 ## Capas de la aplicación
 
 - `src/Domain/`: reglas puras de cuenta y reservas, sin acceso a HTTP ni a PDO.
