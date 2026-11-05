@@ -164,16 +164,17 @@ updatePriceSummary();
 bookingForm?.addEventListener('submit', (event) => {
     event.preventDefault();
 
+    if (bookingForm.dataset.loggedIn !== 'true') {
+        window.location.href = '/cuenta.php#iniciar-sesion';
+        return;
+    }
+
     if (!bookingDate.value) {
         formMessage.textContent = 'Elegí el día del partido para consultar los horarios.';
         document.querySelector('#date-quick-options')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
     if (!bookingForm.reportValidity()) return;
-    if (bookingForm.dataset.loggedIn !== 'true') {
-        window.location.href = '/cuenta.php#iniciar-sesion';
-        return;
-    }
 
     const submitButton = bookingForm.querySelector('button[type="submit"]');
     submitButton.disabled = true;

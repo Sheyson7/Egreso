@@ -84,6 +84,7 @@ $demoMode = booking_demo_mode();
             <form
                 class="booking-card"
                 id="booking-form"
+                novalidate
                 data-logged-in="<?= $user ? 'true' : 'false' ?>"
                 data-csrf="<?= e(csrf_token()) ?>"
                 data-date-max="<?= e(booking_date_limit()->format('Y-m-d')) ?>"
