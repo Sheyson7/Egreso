@@ -21,7 +21,7 @@ document.querySelectorAll('.account-form').forEach((form) => {
             : 'Verificando tus datos…';
 
         try {
-            const response = await fetch(form.action, {
+            const response = await fetch(form.getAttribute('action'), {
                 method: 'POST',
                 headers: { Accept: 'application/json' },
                 body: new FormData(form),
