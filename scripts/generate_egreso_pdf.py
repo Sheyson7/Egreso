@@ -421,7 +421,7 @@ def build_story():
     story = [PageBreak()]
 
     # Page 2 - document control, summary, contents.
-    story += title("Documento del proyecto", "Ficha y resumen ejecutivo", "Versión revisada para alinear el documento con el prototipo Seberih y el plan técnico de egreso.")
+    story += title("Nuestro proyecto", "De qué se trata", "Una mirada clara al trabajo que estamos haciendo para Seberih.")
     story.append(make_table(
         ["Dato", "Definición"],
         [
@@ -435,13 +435,13 @@ def build_story():
     ))
     story += [Spacer(1, 8), h2("Resumen ejecutivo")]
     story.append(p(
-        "El proyecto desarrolla un sistema web para que Seberih pueda presentar sus dos canchas, consultar horarios y recibir solicitudes de reserva asociadas a una cuenta. La interfaz se adapta a escritorio, tablet y celular. El equipo trabaja con PHP, MariaDB, HTML, CSS y JavaScript, y empaqueta el entorno de ejecución con Docker Compose."
+        "Estamos creando una página web para que Seberih muestre sus dos canchas y sus clientes puedan consultar horarios y hacer una reserva desde una cuenta. Queremos que sea fácil de usar tanto en una computadora como en un celular o una tablet. Para construirla usamos PHP, MariaDB, HTML, CSS y JavaScript; Docker nos ayuda a preparar el entorno donde funciona."
     ))
     story.append(p(
-        "La versión demostrativa guarda usuarios en MariaDB y reservas de prueba en un archivo local. El flujo de prueba no cobra dinero; muestra el anticipo estimado. La integración de Mercado Pago está preparada para un despliegue real, pero requiere credenciales del comercio, HTTPS y verificación de notificaciones antes de confirmar pagos."
+        "Por ahora estamos trabajando con una versión de prueba: las cuentas se guardan en MariaDB y las reservas en un archivo local. Se puede recorrer el proceso y ver cuánto sería la seña, pero no se cobra. Para recibir pagos reales con Mercado Pago todavía necesitamos la cuenta del comercio, una página segura con HTTPS y comprobar cada aviso de pago antes de confirmar una reserva."
     ))
     story.append(callout(
-        "Criterio de lectura: este documento describe el alcance existente y separa las funciones de demostración de las pendientes para producción. La SRL se presenta como forma jurídica proyectada para el ejercicio, no como una sociedad ya constituida.",
+        "En estas páginas contamos qué ya podemos mostrar y qué falta para que el sistema se use con clientes. MateCodeUY SRL es la forma que proponemos para el trabajo de Emprendedurismo; la empresa todavía no está constituida.",
         background=colors.HexColor("#F1F5E3"), accent=GOLD,
     ))
     story += [Spacer(1, 9), h2("Contenido")]
@@ -464,21 +464,21 @@ def build_story():
     story.append(PageBreak())
 
     # Page 3 - business, legal status, team.
-    story += title("01 | Identidad", "MateCodeUY y su propuesta empresarial", "Equipo estudiantil que diseña y construye una solución de software para un cliente deportivo local.")
+    story += title("01 | Quiénes somos", "MateCodeUY y nuestra propuesta", "Somos un equipo de estudiantes y este es el primer proyecto que desarrollamos para un cliente de nuestra zona.")
     story += [h2("Actividad y propuesta de valor"), p(
-        "MateCodeUY es la denominación de trabajo del emprendimiento académico. Su propuesta consiste en analizar procesos de organizaciones locales y desarrollar soluciones web accesibles, seguras y mantenibles. El primer caso de aplicación es la gestión de reservas de canchas para Seberih."
+        "MateCodeUY es el nombre que elegimos para nuestro emprendimiento en este proyecto. La idea es ayudar a organizaciones de la zona a resolver tareas cotidianas con herramientas digitales sencillas. Nuestro primer trabajo es una página para consultar y reservar las canchas de Seberih."
     ), p(
-        "Misión: acercar herramientas digitales prácticas a pequeñas organizaciones mediante software desarrollado con participación del cliente, documentación clara y una puesta en marcha gradual."
+        "Nuestra misión es acercar soluciones digitales útiles a pequeños emprendimientos. Para lograrlo, queremos escuchar a cada cliente, explicar con claridad cómo funciona el sistema y avanzar paso a paso."
     ), h2("Forma jurídica proyectada: Sociedad de Responsabilidad Limitada")]
     story.append(p(
-        "Para el componente de Emprendedurismo, el equipo propone organizar MateCodeUY como una Sociedad de Responsabilidad Limitada (SRL). La denominación <b>MateCodeUY SRL</b> se utiliza en este documento como propuesta académica y queda sujeta a disponibilidad registral. No se afirma que la sociedad esté constituida ni inscripta."
+        "Para la materia Emprendedurismo proponemos que MateCodeUY sea una Sociedad de Responsabilidad Limitada (SRL). Por eso en este trabajo usamos el nombre <b>MateCodeUY SRL</b>. Es una propuesta para el proyecto escolar: todavía no hemos creado ni registrado la empresa, y habría que comprobar si ese nombre está disponible."
     ))
     story.append(p(
-        "La Ventanilla Única de Inversiones de Uruguay describe para una SRL etapas de contrato social e inscripción registral, además de los trámites tributarios y de seguridad social correspondientes. La formalización efectiva debe verificarse con los organismos y asesoramiento profesional vigentes antes de iniciar actividad comercial. [1][2]",
+        "Si en algún momento quisiéramos poner en marcha la empresa de verdad, habría que preparar el contrato, inscribirla y hacer los trámites correspondientes ante los organismos uruguayos. Antes de iniciar una actividad comercial, deberíamos informarnos con las oficinas y profesionales que correspondan. [1][2]",
         "BodyCompact",
     ))
     story.append(callout(
-        "Cliente y desarrollador son entidades distintas: Seberih es el complejo deportivo que aporta el contexto de uso; MateCodeUY es el equipo que propone y desarrolla el sistema.",
+        "Seberih es el complejo deportivo para el que estamos pensando la solución. MateCodeUY es nuestro equipo y el nombre del emprendimiento que la desarrolla.",
         background=PALE,
     ))
     story += [Spacer(1, 5), h2("Equipo y responsabilidades del proyecto")]
@@ -492,15 +492,15 @@ def build_story():
         ], [43 * mm, 125 * mm], compact=True,
     ))
     story.append(Spacer(1, 4))
-    story.append(p("Los roles se consolidaron a partir del borrador y sus actas. El equipo debe verificar la grafía oficial de los apellidos y aprobar la asignación antes de entregar.", "BodySmall"))
+    story.append(p("Revisamos los roles con la información que aparece en el borrador y las actas. Antes de entregar, tenemos que confirmar que los nombres y las tareas estén escritos correctamente.", "BodySmall"))
     story.append(PageBreak())
 
     # Page 4 - problem and scope.
-    story += title("02 | Contexto", "Problema, objetivos y alcance", "El alcance se limita a las necesidades del piloto de dos canchas de Seberih.")
+    story += title("02 | La necesidad", "Qué queremos resolver", "La primera versión está pensada para las dos canchas de Seberih.")
     story += [h2("Problema que se busca atender"), p(
-        "La coordinación manual de turnos puede producir consultas repetidas, confusión sobre quién reservó y dificultades para comprobar la disponibilidad. El sistema propone concentrar en una web la selección de cancha, fecha, duración y estado de cada solicitud."
+        "Cuando los turnos se coordinan a mano, es fácil repetir consultas o confundirse sobre quién reservó y qué horario sigue libre. Queremos reunir esa información en un mismo lugar para que se pueda elegir la cancha, el día, la duración y consultar el estado de la reserva."
     ), h2("Objetivo general"), p(
-        "Construir y documentar un prototipo web adaptable que permita a clientes con cuenta consultar disponibilidad y registrar reservas para las dos canchas de Seberih, con información visible para el usuario y el propietario."
+        "Nuestro objetivo es construir y explicar una página que funcione en distintos dispositivos. Las personas con una cuenta podrán consultar horarios y reservar cualquiera de las dos canchas; el cliente también podrá revisar las reservas recibidas."
     ), h2("Objetivos específicos")]
     story.append(make_table(
         ["Objetivo", "Resultado esperado"],
@@ -525,7 +525,7 @@ def build_story():
     story.append(PageBreak())
 
     # Page 5 - functional requirements.
-    story += title("03 | Requerimientos", "Requerimientos funcionales", "La columna de estado distingue lo que ya se puede demostrar de lo que necesita configuración adicional.")
+    story += title("03 | Lo que hace", "Funciones de la página", "Indicamos qué funciones ya se pueden probar y cuáles necesitan trabajo antes de usarse en serio.")
     functional = [
         ["RF-01", "Cuenta", "Registrar una cuenta con nombre, correo y contraseña; iniciar y cerrar sesión.", "Prototipo"],
         ["RF-02", "Canchas", "Permitir consultar y seleccionar una de las dos canchas configuradas.", "Prototipo"],
@@ -551,7 +551,7 @@ def build_story():
     story.append(PageBreak())
 
     # Page 6 - quality requirements and use cases.
-    story += title("04 | Requerimientos", "Calidad y casos de uso", "Metas que deben verificarse durante el desarrollo y antes de una puesta en producción.")
+    story += title("04 | Cómo debe funcionar", "Calidad y situaciones de uso", "Además de funcionar, la página tiene que ser fácil de entender y cuidar la información de las personas.")
     quality = [
         ["RNF-01", "Adaptabilidad", "La interfaz debe ser legible y operable en celular, tablet y escritorio.", "Diseño implementado; revisión continua."],
         ["RNF-02", "Seguridad de acceso", "Contraseñas con hash; sesiones protegidas; formularios con token CSRF.", "Aplicado en el prototipo."],
@@ -575,7 +575,7 @@ def build_story():
     story.append(PageBreak())
 
     # Page 7 - risks.
-    story += title("05 | Gestión", "Riesgos y contingencias", "Riesgos vinculados al producto, al entorno local y al paso de demostración a servicio real.")
+    story += title("05 | Cosas a tener en cuenta", "Riesgos y cómo responder", "Pensamos qué podría salir mal y qué podemos hacer para reducir esos problemas.")
     risks = [
         ["R-01", "La cuenta está en MariaDB local y las reservas demo en un archivo; copiar solo el código no transporta los datos.", "Alta", "Alta", "Documentar respaldo y copia íntegra; probar restauración y migrar a almacenamiento administrado antes de operar."],
         ["R-02", "Los pagos reales no pueden confirmarse sin credenciales, HTTPS y notificaciones verificables.", "Media", "Alta", "Mantener el modo demo claramente rotulado; activar producción solo tras prueba de webhooks y conciliación."],
@@ -588,16 +588,16 @@ def build_story():
     story.append(make_table(["ID", "Riesgo", "Prob.", "Impacto", "Mitigación"], risks, [15 * mm, 69 * mm, 18 * mm, 19 * mm, 47 * mm], compact=True))
     story += [Spacer(1, 8), h2("Seguimiento")]
     story.append(p(
-        "El responsable del proyecto revisará riesgos en cada reunión de seguimiento. Los cambios de tarifa, flujo de pago, política de cancelación o datos recopilados requieren acuerdo del cliente y registro en acta antes de desplegarse."
+        "En las reuniones iremos repasando estos riesgos. Si cambiamos el precio, la forma de pagar, las cancelaciones o los datos que pedimos, primero tenemos que hablarlo con Seberih y dejarlo anotado."
     ))
     story.append(callout(
-        "No se presenta el modo de demostración como servicio transaccional: reserva un horario de prueba en el equipo anfitrión, pero no cobra ni sincroniza automáticamente datos con otras computadoras.",
+        "La versión de prueba guarda la reserva en la computadora donde está funcionando. No realiza cobros ni comparte automáticamente esa información con otros equipos.",
         background=colors.HexColor("#F9EEE9"), accent=RED,
     ))
     story.append(PageBreak())
 
     # Page 8 - SWOT and viability.
-    story += title("06 | Análisis", "FODA y viabilidad inicial", "Evaluación cualitativa del proyecto en su estado de prototipo.")
+    story += title("06 | Lo que vemos", "FODA y posibilidades del proyecto", "Una primera mirada a los puntos fuertes, los desafíos y lo que todavía necesitamos comprobar.")
     swot = [
         ["FORTALEZAS", "OPORTUNIDADES"],
         ["- Prototipo funcional para dos canchas.\n- Interfaz adaptable y flujo de cuenta.\n- Reglas y persistencia diferenciadas para demo y pago.", "- Validar el flujo con un cliente real.\n- Activar pagos en línea después de acordar condiciones.\n- Adaptar el producto a otros complejos si el piloto funciona."],
@@ -633,11 +633,11 @@ def build_story():
     ]
     story.append(make_table(["Dimensión", "Evaluación"], viability, [32 * mm, 136 * mm], compact=True))
     story.append(Spacer(1, 5))
-    story.append(p("Conclusión de viabilidad: viable como prototipo académico y piloto controlado; la operación abierta al público queda condicionada a las validaciones indicadas.", "BodyCompact"))
+    story.append(p("Por ahora vemos el proyecto como una buena base para la entrega y para hacer una prueba controlada con Seberih. Antes de abrirlo al público, aún tenemos que resolver los puntos pendientes de esta evaluación.", "BodyCompact"))
     story.append(PageBreak())
 
     # Page 9 - architecture.
-    story += title("07 | Diseño técnico", "Arquitectura de la solución", "MVC y separación por capas sobre una aplicación PHP contenerizada.")
+    story += title("07 | Cómo está hecha", "Partes de la página", "Mostramos cómo se conectan la página, el servidor y los datos que se guardan.")
     story.append(ArchitectureDiagram())
     story += [Spacer(1, 8), h2("Capas y responsabilidades")]
     layer_rows = [
@@ -650,13 +650,13 @@ def build_story():
     story.append(make_table(["Capa", "Responsabilidad"], layer_rows, [37 * mm, 131 * mm], compact=True))
     story += [Spacer(1, 6), h2("Flujo de una solicitud")]
     story.append(p(
-        "El navegador consulta disponibilidad mediante JSON. El controlador valida la sesión y los datos; las reglas del dominio revisan fecha, horario y duración; finalmente, la infraestructura guarda el cambio en el repositorio correspondiente. En modo demo no se genera una operación financiera."
+        "Cuando alguien consulta un horario, la página le pide la información al servidor. El servidor revisa que la persona haya iniciado sesión y que el día y el horario sean válidos. Después guarda la reserva en el lugar que corresponde. En la prueba no se mueve dinero."
     ))
-    story.append(p("La arquitectura está organizada para una migración gradual: el flujo de reservas conserva funciones de compatibilidad mientras se extraen casos de uso y repositorios.", "BodyCompact"))
+    story.append(p("Estamos ordenando el código por partes para que sea más fácil de entender y mejorar a medida que avance el proyecto.", "BodyCompact"))
     story.append(PageBreak())
 
     # Page 10 - DB.
-    story += title("08 | Persistencia", "Modelo de datos", "Entidades basadas en el esquema SQL del repositorio actual.")
+    story += title("08 | La información", "Qué datos guardamos", "Estas son las principales piezas de información que necesita el sistema.")
     story.append(EntityDiagram())
     story += [Spacer(1, 7), h2("Entidades principales")]
     entities = [
@@ -676,17 +676,17 @@ def build_story():
         ], [33 * mm, 69 * mm, 66 * mm], compact=True,
     ))
     story.append(Spacer(1, 5))
-    story.append(p("Las cuentas y las reservas demo no están almacenadas en el mismo soporte. La descarga del código desde GitHub no incluye los datos locales.", "BodySmall"))
+    story.append(p("En la prueba, las cuentas y las reservas se guardan por separado. Por eso, descargar el código desde GitHub no trae consigo las cuentas ni las reservas que se hayan creado en una computadora.", "BodySmall"))
     story.append(PageBreak())
 
     # Page 11 - booking and payments.
-    story += title("09 | Flujo de reserva", "Demostración local y pago real", "Un mismo flujo de selección con estados distintos según el entorno.")
+    story += title("09 | Reservar", "La prueba y el pago real", "El recorrido se parece en ambos casos, pero solo el pago real confirma que se recibió la seña.")
     story.append(BookingFlow())
     story += [Spacer(1, 8), h2("Modo de prueba actual")]
     story.append(p(
-        "La persona crea una cuenta e inicia sesión antes de reservar. Luego elige una cancha, fecha, duración y horario disponible. El sistema guarda el turno ligado a su cuenta y permite verlo, cambiarlo o cancelarlo mientras siga activo. El texto de interfaz informa que el anticipo es referencial: el modo de prueba no cobra."
+        "Primero, la persona crea una cuenta o inicia sesión. Después elige la cancha, el día, cuántas horas quiere jugar y un horario libre. La reserva queda asociada a su cuenta, así puede verla y, mientras corresponda, cambiarla o cancelarla. En esta versión se muestra cuánto sería la seña, pero no se cobra nada."
     ))
-    story += [h2("Producción con Mercado Pago")]
+    story += [h2("Si más adelante cobramos con Mercado Pago")]
     story.append(make_table(
         ["Paso", "Control esperado"],
         [
@@ -703,7 +703,7 @@ def build_story():
     story.append(PageBreak())
 
     # Page 12 - OS / operations.
-    story += title("10 | Sistemas operativos", "Despliegue y operación", "Docker para el entorno reproducible y Linux como destino de producción propuesto.")
+    story += title("10 | Dónde funciona", "Preparación y mantenimiento", "Usamos Docker para preparar la aplicación y proponemos Linux para alojarla más adelante.")
     story.append(make_table(
         ["Entorno", "Configuración"],
         [
@@ -750,12 +750,12 @@ def build_story():
         story.append(p("- " + line, "BodyCompact"))
     story += [Spacer(1, 6), h2("Conclusión")]
     story.append(p(
-        "El producto cubre una necesidad concreta del cliente piloto y ya permite mostrar el recorrido principal de una reserva sin transacción real. Su estructura técnica responde al plan de PHP, base relacional, Docker, MVC y separación por capas. El equipo puede continuar desde una base demostrable, siempre que mantenga explícitos los límites del modo local y complete las validaciones de negocio, pago, seguridad y operación antes de publicarlo."
+        "Empezamos este proyecto para ayudar a Seberih a ordenar las reservas de sus dos canchas. Ya tenemos una primera versión que permite recorrer el proceso y guardar reservas de prueba. Todavía queda bastante por hacer antes de que pueda usarse con clientes de verdad: tenemos que acordar las reglas con Seberih, preparar los pagos, revisar la seguridad y decidir dónde se alojará la página. Esta versión nos da una base concreta para seguir trabajando juntos."
     ))
     story.append(PageBreak())
 
     # Page 14 - minutes/glossary.
-    story += title("12 | Equipo", "Actas resumidas y glosario", "Se conservaron únicamente los acuerdos que figuran en el borrador proporcionado.")
+    story += title("12 | Nuestro recorrido", "Actas resumidas y palabras técnicas", "Resumimos los acuerdos que encontramos en el borrador y explicamos algunos términos del proyecto.")
     story += [h2("Acta N.º 1 - Inicio y definición de roles")]
     story.append(p("Fecha indicada en el borrador: 10 de mayo de 2026. Asistentes registrados: Gonzalo Ortega, Geisson De Castro, Lucas Alfonzo y Alejo Montenegro.", "BodyCompact"))
     story.append(p("Temas: revisión de pautas de egreso; definición del sistema web de reservas de fútbol 5; asignación inicial de responsabilidades y propuesta de reglamento interno.", "BodyCompact"))
@@ -777,7 +777,7 @@ def build_story():
     story.append(PageBreak())
 
     # Page 15 - sources and validation checklist.
-    story += title("13 | Cierre", "Referencias y validaciones previas", "Fuentes técnicas e institucionales consultadas y datos que el equipo debe confirmar antes de la entrega final.")
+    story += title("13 | Antes de cerrar", "Fuentes y puntos por confirmar", "Anotamos de dónde sacamos la información y qué cosas debemos revisar con el tutor y con Seberih.")
     story += [h2("Referencias")]
     references = [
         "[1] Ventanilla Única de Inversiones del Uruguay. (s. f.). <i>Apertura de empresas: Sociedad de Responsabilidad Limitada</i>. <link href='https://vui.gub.uy/procesos/apertura-de-empresas/' color='#176B70'>https://vui.gub.uy/procesos/apertura-de-empresas/</link>.",
@@ -803,7 +803,7 @@ def build_story():
         story.append(p("- " + item, "BodyCompact"))
     story.append(Spacer(1, 6))
     story.append(callout(
-        "Estado de esta edición: el texto se reorganizó y se alineó con el prototipo y la planificación disponible. La validación final de nombres, políticas comerciales y constitución empresarial corresponde al equipo, al cliente y al tutor.",
+        "Antes de entregar este trabajo, tenemos que revisar estos puntos entre todos. Las decisiones sobre la empresa las debemos conversar con el tutor, y las reglas de las reservas con Seberih.",
         background=colors.HexColor("#F1F5E3"), accent=GOLD,
     ))
     return story
