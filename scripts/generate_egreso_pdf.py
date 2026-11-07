@@ -199,7 +199,7 @@ class ArchitectureDiagram(Flowable):
 
         boxes = [
             (12, 68, 94, 94, "CLIENTE", ["Navegador", "HTML / CSS", "JavaScript"]),
-            (130, 31, 176, 160, "APLICACIÓN PHP", ["Apache + PHP 8.3", "Front Controller", "Router: URL -> controlador", "Controladores y casos de uso"]),
+            (130, 31, 176, 160, "APLICACIÓN PHP", []),
             (337, 101, 145, 76, "DATOS", ["MariaDB 11.4", "Usuarios y pagos"]),
             (337, 24, 145, 60, "MODO DEMO", ["storage/reservations.json", "Sin cobro en local"]),
         ]
@@ -214,11 +214,32 @@ class ArchitectureDiagram(Flowable):
             c.setFillColor(WHITE)
             c.setFont(FONT_BOLD_NAME, 7.1)
             c.drawCentredString(x + bw / 2, y + bh - 15, label)
-            c.setFillColor(INK)
-            c.setFont(FONT, 6.5)
-            start_y = y + bh - 36
-            for index, line in enumerate(lines):
-                c.drawCentredString(x + bw / 2, start_y - index * 12, line)
+            if label == "APLICACIÓN PHP":
+                steps = [
+                    "Front Controller: recibe HTTP",
+                    "Router: URL -> destino",
+                    "Controller: valida y responde",
+                    "Application: coordina la acción",
+                    "BookingPolicy: aplica reglas",
+                    "Persistencia: PDO / JSON demo",
+                ]
+                row_height = 17
+                gap = 3
+                top = y + bh - 29
+                for index, step in enumerate(steps):
+                    row_y = top - (index + 1) * row_height - index * gap + 5
+                    c.setFillColor(PAPER if index % 2 == 0 else WHITE)
+                    c.setStrokeColor(MIST)
+                    c.roundRect(x + 7, row_y, bw - 14, row_height, 4, fill=1, stroke=1)
+                    c.setFillColor(INK)
+                    c.setFont(FONT_BOLD_NAME if index in (0, 3, 4, 5) else FONT, 6.15)
+                    c.drawCentredString(x + bw / 2, row_y + 5.8, step)
+            else:
+                c.setFillColor(INK)
+                c.setFont(FONT, 6.5)
+                start_y = y + bh - 36
+                for index, line in enumerate(lines):
+                    c.drawCentredString(x + bw / 2, start_y - index * 12, line)
 
         c.setStrokeColor(GOLD)
         c.setFillColor(GOLD)
@@ -642,16 +663,19 @@ def build_story():
     story += [Spacer(1, 8), h2("Capas y responsabilidades")]
     layer_rows = [
         ["Presentación", "Es lo que ve la persona en el navegador: páginas, formularios y estilos hechos con HTML, CSS y JavaScript. Desde aquí elige cancha, fecha y horario."],
-        ["Control", "El Front Controller de PHP recibe las solicitudes. El Router lee la URL y la dirige al controlador que corresponde, por ejemplo, el de cuentas o el de reservas."],
-        ["Aplicación y reglas", "Contiene las acciones que puede realizar el sistema y las reglas del negocio: validar la cuenta, revisar horarios y calcular el total y la seña."],
-        ["Persistencia", "Se encarga de guardar y recuperar la información. Usa PDO para comunicarse con MariaDB; en la demostración guarda las reservas en un archivo JSON con bloqueo."],
+        ["Control HTTP", "El Front Controller recibe la solicitud. El Router busca la URL en la tabla de rutas y la envía al destino correspondiente. Después el controller revisa el método, la sesión y el token CSRF, y prepara la respuesta."],
+        ["Aplicación", "Coordina cada acción entre el controller, las reglas y el almacenamiento. Por ejemplo, AuthenticationService registra o autentica cuentas. En reservas, esta separación se está organizando gradualmente."],
+        ["Dominio", "Contiene reglas propias del negocio, separadas de la pantalla: BookingPolicy valida fechas, horarios, duración de 1 a 8 horas, límite de tres meses y cálculo de precio y seña."],
+        ["Persistencia", "Guarda y recupera datos: PDO conecta con MariaDB para cuentas y el flujo preparado de pago; el modo demo usa un repositorio JSON con bloqueo para las reservas."],
         ["Entorno de desarrollo", "Docker Compose levanta PHP con Apache y MariaDB. Ambos servicios se comunican por una red privada; la base de datos no queda expuesta directamente a Internet."],
     ]
     story.append(make_table(["Capa", "Responsabilidad"], layer_rows, [37 * mm, 131 * mm], compact=True))
-    story += [Spacer(1, 6), h2("Flujo de una solicitud")]
+    story += [Spacer(1, 6), h2("Qué hace la capa de aplicación")]
     story.append(p(
-        "El recorrido empieza cuando una persona abre una URL. El Front Controller recibe esa solicitud y el Router interpreta la dirección para enviarla al controlador adecuado. Ese controlador llama a la acción correspondiente; las reglas revisan la sesión, la disponibilidad y los datos. Por último, la capa de persistencia lee o guarda la información. Así mantenemos separadas la pantalla, las reglas y el almacenamiento."
+        "La capa de aplicación conecta lo que pide la persona con las reglas del sistema. Toma la acción y los datos que recibe del controller, invoca el servicio o la política que corresponde y solicita guardar o consultar la información. Luego devuelve un resultado para que el controller responda con un mensaje o datos para la página."
     ))
+    story.append(p("Ejemplo: al crear una reserva, se comprueba que la persona inició sesión y envió un formulario válido; se revisan la fecha, la hora y la duración; se consulta la disponibilidad y se calcula el precio y la seña; finalmente, se guarda el turno asociado a esa cuenta. Si algo no cumple las reglas, se devuelve un error y no se guarda la reserva.", "BodyCompact"))
+    story.append(p("En el código actual, AuthenticationService ya reúne las acciones de registro e inicio de sesión, y BookingPolicy contiene varias reglas de reserva. Parte del flujo de reservas sigue en funciones de src/reservations.php, así que la separación completa en casos de uso es una mejora pendiente.", "BodyCompact"))
     story.append(p("En el entorno de desarrollo, Docker Compose conecta la aplicación y MariaDB mediante una red privada. Esto permite que PHP acceda a la base de datos sin publicar su puerto para otros equipos.", "BodyCompact"))
     story.append(PageBreak())
 
