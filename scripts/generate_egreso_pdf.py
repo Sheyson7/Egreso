@@ -453,12 +453,12 @@ def build_story():
         ["05", "Riesgos y cómo responder", "6"],
         ["06", "FODA y posibilidades del proyecto", "7"],
         ["07", "Partes de la página", "8"],
-        ["08", "Qué datos guardamos", "9"],
-        ["09", "La prueba y el pago real", "10"],
-        ["10", "Preparación y mantenimiento", "11"],
-        ["11", "Etapas, aceptación y conclusión", "12"],
-        ["12", "Actas y palabras técnicas", "13"],
-        ["13", "Fuentes y puntos por confirmar", "14"],
+        ["08", "Qué datos guardamos y cómo se relacionan", "9-10"],
+        ["09", "La prueba y el pago real", "11"],
+        ["10", "Preparación y mantenimiento", "12"],
+        ["11", "Etapas, aceptación y conclusión", "13"],
+        ["12", "Actas y palabras técnicas", "14"],
+        ["13", "Fuentes y puntos por confirmar", "15"],
     ]
     story.append(make_table(["N.º", "Sección", "Pág."], index_rows, [14 * mm, 136 * mm, 18 * mm], compact=True))
     story.append(PageBreak())
@@ -658,13 +658,14 @@ def build_story():
     # Page 10 - DB.
     story += title("08 | La información", "Qué datos guardamos", "Estas son las principales piezas de información que necesita el sistema.")
     story.append(EntityDiagram())
-    story += [Spacer(1, 7), h2("Entidades principales")]
+    story += [Spacer(1, 7), h2("Cómo se relacionan las tablas")]
     entities = [
-        ["users", "id, full_name, email único, phone opcional, password_hash y created_at."],
-        ["reservations", "id UUID, user_id, court_id, starts_at, ends_at, importes, moneda, estado, referencias del pago y expiración."],
-        ["reservation_slots", "Clave compuesta (court_id, slot_start) y reservation_id. Hace único cada bloque de una cancha."],
+        ["users -> reservations", "Una cuenta puede tener varias reservas. Cada reserva guarda user_id como clave foránea para asociarla a su dueño."],
+        ["reservations -> reservation_slots", "Una reserva puede ocupar varios bloques horarios. Cada bloque apunta a una reserva; al borrarla, sus bloques se eliminan en cascada."],
+        ["reservation_slots: clave compuesta", "court_id + slot_start forman la clave primaria. Así la base impide guardar dos reservas para la misma cancha y hora."],
+        ["Índices", "Hay índices para buscar las reservas de una cuenta y para encontrar reservas pendientes que estén por vencer."],
     ]
-    story.append(make_table(["Entidad", "Datos / integridad"], entities, [42 * mm, 126 * mm], compact=True))
+    story.append(make_table(["Relación / regla", "Qué significa"], entities, [47 * mm, 121 * mm], compact=True))
     story += [Spacer(1, 6), h2("Persistencia por modo")]
     story.append(make_table(
         ["Dato", "Demostración local", "Pago en producción"],
@@ -679,7 +680,31 @@ def build_story():
     story.append(p("En la prueba, las cuentas y las reservas se guardan por separado. Por eso, descargar el código desde GitHub no trae consigo las cuentas ni las reservas que se hayan creado en una computadora.", "BodySmall"))
     story.append(PageBreak())
 
-    # Page 11 - booking and payments.
+    # Page 11 - detailed schema and planned extension.
+    story += title("08 | La información", "Tablas actuales y mejoras propuestas", "Separamos el esquema que ya existe de las tablas que recomendamos agregar si el proyecto avanza a producción.")
+    story.append(p("El esquema SQL actual tiene tres tablas. La primera guarda las cuentas, la segunda las reservas y la tercera bloquea cada hora ocupada. Debajo resumimos sus campos más importantes; PK significa clave primaria y FK, clave foránea.", "BodyCompact"))
+    current_schema = [
+        ["users", "id BIGINT (PK); full_name VARCHAR(120); email VARCHAR(190), único; phone opcional; password_hash; created_at. La contraseña se guarda como hash, nunca como texto legible."],
+        ["reservations", "id CHAR(36) (PK); user_id BIGINT UNSIGNED (FK a users); court_id TINYINT UNSIGNED; starts_at y ends_at DATETIME; total_amount y deposit_amount INT UNSIGNED; currency CHAR(3); status ENUM; payment_preference_id, payment_id; expires_at y created_at."],
+        ["reservation_slots", "court_id TINYINT UNSIGNED + slot_start DATETIME (PK compuesta); reservation_id CHAR(36) (FK a reservations). Tiene un índice por reserva y borrado en cascada para liberar sus bloques."],
+    ]
+    story.append(make_table(["Tabla actual", "Campos y reglas principales"], current_schema, [38 * mm, 130 * mm]))
+    story.append(p("Estados de una reserva: pending_payment espera el pago; confirmed indica que fue verificado; demo identifica una prueba sin cobro; payment_failed, expired y cancelled representan un pago fallido, una solicitud vencida o una reserva cancelada.", "BodyCompact"))
+    story += [Spacer(1, 7), h2("Tablas que proponemos para una versión más completa")]
+    story.append(p("Estas tablas no están creadas todavía. Las proponemos para que las canchas, los pagos y los cambios de una reserva tengan su propio registro y sea más sencillo administrarlos.", "BodyCompact"))
+    proposed_schema = [
+        ["courts", "id (PK), name, description y is_active. Guardaría el nombre y estado de cada cancha. reservations.court_id pasaría a ser una FK a esta tabla, en vez de depender de un número fijo en el código."],
+        ["payments", "id (PK), reservation_id (FK), provider, provider_payment_id, preference_id, amount, currency, status y created_at. Permitiría guardar más de un intento de pago por reserva y consultar su resultado."],
+        ["reservation_history", "id (PK), reservation_id (FK), actor_user_id (FK), action, horario anterior y nuevo, created_at. Dejaría un registro de cambios y cancelaciones para resolver consultas."],
+    ]
+    story.append(make_table(["Tabla propuesta", "Para qué serviría y campos sugeridos"], proposed_schema, [43 * mm, 125 * mm]))
+    story += [Spacer(1, 6), callout(
+        "Antes de implementar esta ampliación habría que actualizar el esquema y el código, migrar court_id a una relación con courts y mover las referencias de pago desde reservations a payments. La tabla de historial debería guardar solo los datos necesarios y tener acceso restringido.",
+        background=colors.HexColor("#F1F5E3"), accent=GOLD,
+    )]
+    story.append(PageBreak())
+
+    # Page 12 - booking and payments.
     story += title("09 | Reservar", "La prueba y el pago real", "El recorrido se parece en ambos casos, pero solo el pago real confirma que se recibió la seña.")
     story.append(BookingFlow())
     story += [Spacer(1, 8), h2("Modo de prueba actual")]
@@ -702,7 +727,7 @@ def build_story():
     )]
     story.append(PageBreak())
 
-    # Page 12 - OS / operations.
+    # Page 13 - OS / operations.
     story += title("10 | Dónde funciona", "Preparación y mantenimiento", "Usamos Docker para preparar la aplicación y proponemos Linux para alojarla más adelante.")
     story.append(make_table(
         ["Entorno", "Configuración"],
@@ -728,7 +753,7 @@ def build_story():
     )]
     story.append(PageBreak())
 
-    # Page 13 - roadmap/conclusion.
+    # Page 14 - roadmap/conclusion.
     story += title("11 | Plan de trabajo", "Etapas, aceptación y conclusión", "Propuesta para pasar de prototipo escolar a piloto preparado.")
     roadmap = [
         ["A", "Prototipo", "Registro, acceso, disponibilidad, reservas demo y vista responsive.", "Demostración en equipo local."],
@@ -754,7 +779,7 @@ def build_story():
     ))
     story.append(PageBreak())
 
-    # Page 14 - minutes/glossary.
+    # Page 15 - minutes/glossary.
     story += title("12 | Nuestro recorrido", "Actas resumidas y palabras técnicas", "Resumimos los acuerdos que encontramos en el borrador y explicamos algunos términos del proyecto.")
     story += [h2("Acta N.º 1 - Inicio y definición de roles")]
     story.append(p("Fecha indicada en el borrador: 10 de mayo de 2026. Asistentes registrados: Gonzalo Ortega, Geisson De Castro, Lucas Alfonzo y Alejo Montenegro.", "BodyCompact"))
@@ -776,7 +801,7 @@ def build_story():
     story.append(make_table(["Término", "Definición"], glossary, [39 * mm, 129 * mm], compact=True))
     story.append(PageBreak())
 
-    # Page 15 - sources and validation checklist.
+    # Page 16 - sources and validation checklist.
     story += title("13 | Antes de cerrar", "Fuentes y puntos por confirmar", "Anotamos de dónde sacamos la información y qué cosas debemos revisar con el tutor y con Seberih.")
     story += [h2("Referencias")]
     references = [
