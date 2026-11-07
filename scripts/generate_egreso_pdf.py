@@ -753,15 +753,26 @@ def build_story():
 
     # Page 13 - OS / operations.
     story += title("10 | Dónde funciona", "Preparación y mantenimiento", "Usamos Docker para preparar la aplicación y proponemos Linux para alojarla más adelante.")
+    story += [h2("¿Qué hace Docker en este proyecto?"), p(
+        "Docker permite ejecutar la página y la base de datos en contenedores separados, con las versiones y herramientas que necesita cada una. Docker Compose lee el archivo docker-compose.yml y coordina el arranque de ambos servicios para que el entorno sea más fácil de repetir en otra computadora."
+    )]
     story.append(make_table(
-        ["Entorno", "Configuración"],
+        ["Parte", "Qué hace", "Cómo está configurada"],
         [
-            ["Desarrollo actual", "Windows 11 con Docker Desktop y WSL 2; web local en localhost:8080."],
-            ["Contenedor web", "PHP 8.3 con Apache, extensiones curl y PDO MySQL, reglas de seguridad PHP y ejecución como usuario de servicio."],
-            ["Base de datos", "MariaDB 11.4 en contenedor separado, con volumen nombrado; no publica puerto de base de datos al host."],
-            ["Producción propuesta", "Ubuntu Server 24.04 LTS y Docker rootless, detrás de un dominio con TLS/HTTPS; requiere pruebas en el servidor elegido."],
-        ], [39 * mm, 129 * mm], compact=True,
+            ["Dockerfile", "Describe cómo se construye la imagen de la web.", "Parte de PHP 8.3 con Apache e instala curl y PDO MySQL."],
+            ["Servicio web", "Atiende las visitas y ejecuta el código PHP.", "El puerto 80 del contenedor se muestra como localhost:8080 en esta PC."],
+            ["Servicio db", "Guarda las cuentas y los datos relacionales.", "MariaDB 11.4; solo la web accede a db:3306 por la red privada."],
+            ["Docker Compose", "Levanta y conecta los servicios.", "Espera a que MariaDB esté lista antes de iniciar la web."],
+            ["Almacenamiento", "Conserva los datos aunque se reemplace un contenedor.", "MariaDB usa el volumen mariadb_data; el archivo de reservas demo queda en storage."],
+            ["Configuración", "Permite cambiar claves y opciones sin escribirlas en el código.", "Los valores se leen desde el archivo .env local, que no se debe subir al repositorio."],
+        ], [31 * mm, 62 * mm, 75 * mm], compact=True,
     ))
+    story += [Spacer(1, 5), callout(
+        "Recorrido local: navegador -> localhost:8080 -> contenedor web -> red privada -> contenedor db. La base de datos no tiene un puerto publicado para el navegador ni para otros equipos de la red.",
+        background=colors.HexColor("#F1F5E3"), accent=GOLD,
+    )]
+    story += [Spacer(1, 7), h2("Entorno de desarrollo y destino futuro")]
+    story.append(p("Hoy desarrollamos en Windows con Docker Desktop y WSL 2. Docker ayuda a mantener PHP y MariaDB preparados de la misma manera cuando el proyecto se mueve entre equipos. Más adelante se propone alojarlo en un servidor Linux con Docker; esa configuración todavía debe instalarse, probarse y protegerse para producción.", "BodyCompact"))
     story += [Spacer(1, 8), h2("Automatización y mantenimiento")]
     ops_rows = [
         ["backup_database.sh", "Comprime un volcado de MariaDB y copia el archivo de reservas demo; conserva una ventana configurable."],
