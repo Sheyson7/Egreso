@@ -754,7 +754,7 @@ def build_story():
     # Page 13 - OS / operations.
     story += title("10 | Dónde funciona", "Preparación y mantenimiento", "Usamos Docker para preparar la aplicación y proponemos Linux para alojarla más adelante.")
     story += [h2("¿Qué hace Docker en este proyecto?"), p(
-        "Docker permite ejecutar la página y la base de datos en contenedores separados, con las versiones y herramientas que necesita cada una. Docker Compose lee el archivo docker-compose.yml y coordina el arranque de ambos servicios para que el entorno sea más fácil de repetir en otra computadora."
+        "Docker ejecuta la web y la base de datos en contenedores separados. Docker Compose lee docker-compose.yml, prepara los servicios y los conecta para repetir el mismo entorno en distintas computadoras."
     )]
     story.append(make_table(
         ["Parte", "Qué hace", "Cómo está configurada"],
@@ -772,9 +772,13 @@ def build_story():
         background=colors.HexColor("#F1F5E3"), accent=GOLD,
     )]
     story += [Spacer(1, 7), h2("Mostrar las tablas con Adminer")]
-    story.append(p("Para una demostración se puede iniciar Adminer con el perfil Docker Compose database-ui. Se abre en http://localhost:8081; allí se elige el servidor db y se inicia sesión con los valores DB_NAME, DB_USER y DB_PASSWORD del archivo .env. La página de Adminer también queda limitada a esta computadora y no forma parte del arranque normal de producción.", "BodyCompact"))
+    story.append(p("Para mostrar las tablas, activa el perfil database-ui. Adminer abre en localhost:8081; inicia sesión con servidor db y los valores DB_NAME, DB_USER y DB_PASSWORD del archivo .env. Solo se abre en esta computadora y no arranca en producción.", "BodyCompact"))
     story += [Spacer(1, 7), h2("Entorno de desarrollo y destino futuro")]
-    story.append(p("Hoy desarrollamos en Windows con Docker Desktop y WSL 2. Docker ayuda a mantener PHP y MariaDB preparados de la misma manera cuando el proyecto se mueve entre equipos. Más adelante se propone alojarlo en un servidor Linux con Docker; esa configuración todavía debe instalarse, probarse y protegerse para producción.", "BodyCompact"))
+    story.append(p("Hoy desarrollamos en Windows con Docker Desktop y WSL 2, para preparar PHP y MariaDB de forma reproducible. Más adelante proponemos alojar el sitio en Linux; esa configuración aún debe instalarse y probarse.", "BodyCompact"))
+    story += [Spacer(1, 6), h2("Abrir el proyecto con doble clic")]
+    story.append(p("Abrir Seberih.bat llama a PowerShell: revisa Docker y Compose, inicia Docker Desktop si está instalado pero cerrado y crea .env con claves aleatorias si falta. Compose prepara las imágenes, inicia web, MariaDB y Adminer, espera a que respondan y abre ambas páginas.", "BodyCompact"))
+    story.append(p("Para otra PC con Windows, copia la carpeta completa e instala Docker Desktop allí. La primera vez se necesita Internet para descargar las imágenes. El acceso directo no instala Docker Desktop.", "BodyCompact"))
+    story.append(p("Cada PC mantiene sus propios datos: cuentas en el volumen local de MariaDB y reservas demo en storage. Copiar la carpeta no copia la base; para reutilizar los datos hay que crear y restaurar un respaldo.", "BodyCompact"))
     story += [Spacer(1, 8), h2("Automatización y mantenimiento")]
     ops_rows = [
         ["backup_database.sh", "Comprime un volcado de MariaDB y copia el archivo de reservas demo; conserva una ventana configurable."],
