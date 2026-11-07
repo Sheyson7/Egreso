@@ -95,15 +95,21 @@ if ($envPort -and [int]::TryParse($envPort.Matches[0].Groups[1].Value, [ref]$por
     $port = [int]$envPort.Matches[0].Groups[1].Value
 }
 $url = "http://localhost:$port"
+$adminerPort = 8081
+$envAdminerPort = Select-String -Path $envFile -Pattern '^ADMINER_PORT=(\d+)$' | Select-Object -First 1
+if ($envAdminerPort -and [int]::TryParse($envAdminerPort.Matches[0].Groups[1].Value, [ref]$adminerPort)) {
+    $adminerPort = [int]$envAdminerPort.Matches[0].Groups[1].Value
+}
+$adminerUrl = "http://localhost:$adminerPort"
 
 Write-Host 'Preparando Seberih. La primera apertura puede tardar mientras se descargan los componentes…'
 try {
-    docker compose up --build -d
+    docker compose --profile database-ui up --build -d
     if ($LASTEXITCODE -ne 0) {
         throw 'Docker Compose no pudo iniciar los servicios.'
     }
 } catch {
-    docker compose logs --tail 30 web db
+    docker compose logs --tail 30 web db adminer
     Stop-WithMessage 'No se pudo iniciar la página. Revisa el mensaje anterior y confirma que Docker tenga conexión a internet.'
 }
 
@@ -121,10 +127,30 @@ for ($attempt = 0; $attempt -lt 90; $attempt++) {
 }
 
 if (-not $siteReady) {
-    docker compose logs --tail 30 web db
+    docker compose logs --tail 30 web db adminer
     Stop-WithMessage 'Los contenedores iniciaron, pero la página no respondió a tiempo. Revisa los registros anteriores.'
+}
+
+$adminerReady = $false
+for ($attempt = 0; $attempt -lt 30; $attempt++) {
+    try {
+        $response = Invoke-WebRequest -Uri $adminerUrl -UseBasicParsing -TimeoutSec 3
+        if ($response.StatusCode -eq 200) {
+            $adminerReady = $true
+            break
+        }
+    } catch {
+        Start-Sleep -Seconds 1
+    }
 }
 
 Write-Host "Abriendo $url"
 Start-Process $url
+if ($adminerReady) {
+    Write-Host "Abriendo la base de datos en $adminerUrl"
+    Start-Process $adminerUrl
+} else {
+    Write-Warning "Adminer no respondió a tiempo. Puedes abrirlo luego en $adminerUrl."
+}
+Write-Host "En Adminer, usa servidor 'db', el nombre de base de datos de DB_NAME y las credenciales DB_USER/DB_PASSWORD de tu archivo .env."
 Write-Host 'Listo. Puedes cerrar esta ventana; Docker mantendrá el sitio disponible.' -ForegroundColor Green

@@ -771,6 +771,8 @@ def build_story():
         "Recorrido local: navegador -> localhost:8080 -> contenedor web -> red privada -> contenedor db. La base de datos no tiene un puerto publicado para el navegador ni para otros equipos de la red.",
         background=colors.HexColor("#F1F5E3"), accent=GOLD,
     )]
+    story += [Spacer(1, 7), h2("Mostrar las tablas con Adminer")]
+    story.append(p("Para una demostración se puede iniciar Adminer con el perfil Docker Compose database-ui. Se abre en http://localhost:8081; allí se elige el servidor db y se inicia sesión con los valores DB_NAME, DB_USER y DB_PASSWORD del archivo .env. La página de Adminer también queda limitada a esta computadora y no forma parte del arranque normal de producción.", "BodyCompact"))
     story += [Spacer(1, 7), h2("Entorno de desarrollo y destino futuro")]
     story.append(p("Hoy desarrollamos en Windows con Docker Desktop y WSL 2. Docker ayuda a mantener PHP y MariaDB preparados de la misma manera cuando el proyecto se mueve entre equipos. Más adelante se propone alojarlo en un servidor Linux con Docker; esa configuración todavía debe instalarse, probarse y protegerse para producción.", "BodyCompact"))
     story += [Spacer(1, 8), h2("Automatización y mantenimiento")]

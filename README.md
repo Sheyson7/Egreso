@@ -24,13 +24,16 @@ Sitio web del complejo deportivo Seberih. La reserva requiere una cuenta con nom
 
 ## Entorno con Docker Compose
 
-El entorno separa Apache/PHP de MariaDB. El puerto de la base de datos no se publica al host; los servicios se conectan por una red privada y los datos sobreviven a los reinicios en el volumen nombrado `mariadb_data`. El archivo `storage/reservations.json` continúa en una carpeta del host.
+El entorno separa Apache/PHP de MariaDB. El puerto de la base de datos no se publica al host; los servicios se conectan por una red privada y los datos sobreviven a los reinicios en el volumen nombrado `mariadb_data`. El archivo `storage/reservations.json` continúa en una carpeta del host. Para mostrar las tablas se incluye Adminer, una interfaz web de administración que solo se activa con el perfil local `database-ui`.
 
 1. Si todavía no existe, copiá `.env.example` a `.env` y definí contraseñas propias para `DB_PASSWORD` y `DB_ROOT_PASSWORD`. No subas `.env` a Git.
 2. Revisá la configuración sin imprimir secretos: `docker compose config -q`.
-3. Construí e iniciá los servicios: `docker compose up --build -d`.
-4. Abrí `http://localhost:8080` (o el puerto configurado en `WEB_PORT`).
-5. Para detenerlos conservando los datos: `docker compose down`. No uses `docker compose down -v` salvo que quieras borrar también la base de datos.
+3. Para iniciar la página y la interfaz de base de datos: `docker compose --profile database-ui up --build -d`.
+4. Abrí `http://localhost:8080` (o el puerto configurado en `WEB_PORT`) para el sitio y `http://localhost:8081` (o `ADMINER_PORT`) para Adminer.
+5. En Adminer, seleccioná el motor MySQL, usá `db` como servidor, el valor `DB_NAME` como base y las credenciales `DB_USER` / `DB_PASSWORD` de `.env`.
+6. Para detenerlos conservando los datos: `docker compose --profile database-ui down`. No uses `docker compose down -v` salvo que quieras borrar también la base de datos.
+
+Adminer solo publica el puerto en `127.0.0.1` (esta computadora). El acceso se hace con las credenciales de MariaDB; no compartas la contraseña root con el cliente. El acceso directo de Windows inicia el perfil de demostración y abre el sitio y Adminer. El servicio no se inicia en los comandos normales de producción, a menos que se active expresamente el perfil.
 
 MariaDB inicializa `database/schema.sql` al crear el volumen por primera vez. Los errores de PHP y Apache y los registros de acceso quedan en `storage/logs/`.
 
