@@ -199,7 +199,7 @@ class ArchitectureDiagram(Flowable):
 
         boxes = [
             (12, 68, 94, 94, "CLIENTE", ["Navegador", "HTML / CSS", "JavaScript"]),
-            (130, 38, 176, 145, "APLICACIÓN PHP", ["Apache + PHP 8.3", "Controladores HTTP", "Casos de uso y reglas", "Validación y sesión"]),
+            (130, 31, 176, 160, "APLICACIÓN PHP", ["Apache + PHP 8.3", "Front Controller", "Router: URL -> controlador", "Controladores y casos de uso"]),
             (337, 101, 145, 76, "DATOS", ["MariaDB 11.4", "Usuarios y pagos"]),
             (337, 24, 145, 60, "MODO DEMO", ["storage/reservations.json", "Sin cobro en local"]),
         ]
@@ -444,21 +444,21 @@ def build_story():
         "En estas páginas contamos qué ya podemos mostrar y qué falta para que el sistema se use con clientes. MateCodeUY SRL es la forma que proponemos para el trabajo de Emprendedurismo; la empresa todavía no está constituida.",
         background=colors.HexColor("#F1F5E3"), accent=GOLD,
     ))
-    story += [Spacer(1, 9), h2("Contenido")]
+    story += [Spacer(1, 9), h2("Índice")]
     index_rows = [
-        ["01", "Empresa, figura propuesta y equipo", "3"],
-        ["02", "Problema, alcance y personas interesadas", "4"],
-        ["03", "Requerimientos funcionales", "5"],
-        ["04", "Requerimientos de calidad y casos de uso", "6"],
-        ["05", "Riesgos y contingencias", "7"],
-        ["06", "Análisis FODA y viabilidad", "8"],
-        ["07", "Arquitectura de la solución", "9"],
-        ["08", "Datos y persistencia", "10"],
-        ["09", "Reserva y pago: demo y producción", "11"],
-        ["10", "Sistemas operativos y operación", "12"],
-        ["11", "Etapas, aceptación y conclusión", "13"],
-        ["12", "Actas y glosario", "14"],
-        ["13", "Referencias y validaciones previas", "15"],
+        ["01", "Empresa, figura propuesta y equipo", "2"],
+        ["02", "Problema, alcance y personas interesadas", "3"],
+        ["03", "Funciones de la página", "4"],
+        ["04", "Calidad y situaciones de uso", "5"],
+        ["05", "Riesgos y cómo responder", "6"],
+        ["06", "FODA y posibilidades del proyecto", "7"],
+        ["07", "Partes de la página", "8"],
+        ["08", "Qué datos guardamos", "9"],
+        ["09", "La prueba y el pago real", "10"],
+        ["10", "Preparación y mantenimiento", "11"],
+        ["11", "Etapas, aceptación y conclusión", "12"],
+        ["12", "Actas y palabras técnicas", "13"],
+        ["13", "Fuentes y puntos por confirmar", "14"],
     ]
     story.append(make_table(["N.º", "Sección", "Pág."], index_rows, [14 * mm, 136 * mm, 18 * mm], compact=True))
     story.append(PageBreak())
@@ -641,18 +641,18 @@ def build_story():
     story.append(ArchitectureDiagram())
     story += [Spacer(1, 8), h2("Capas y responsabilidades")]
     layer_rows = [
-        ["Presentación", "Vistas PHP y recursos HTML, CSS y JavaScript. Captura la selección y muestra disponibilidad, estado y mensajes."],
-        ["Control HTTP", "Front controller y controladores de cuenta, reserva, disponibilidad, gestión local y pagos."],
-        ["Aplicación y dominio", "Autenticación, políticas de reserva, cálculo de tarifa/anticipo y validaciones del negocio."],
-        ["Infraestructura", "Adaptadores PDO para MariaDB y repositorio JSON con bloqueo para las reservas demo."],
-        ["Ejecución", "Apache/PHP y MariaDB en Docker Compose; almacenamiento persistente, red privada y configuración por entorno."],
+        ["Presentación", "Es lo que ve la persona en el navegador: páginas, formularios y estilos hechos con HTML, CSS y JavaScript. Desde aquí elige cancha, fecha y horario."],
+        ["Control", "El Front Controller de PHP recibe las solicitudes. El Router lee la URL y la dirige al controlador que corresponde, por ejemplo, el de cuentas o el de reservas."],
+        ["Aplicación y reglas", "Contiene las acciones que puede realizar el sistema y las reglas del negocio: validar la cuenta, revisar horarios y calcular el total y la seña."],
+        ["Persistencia", "Se encarga de guardar y recuperar la información. Usa PDO para comunicarse con MariaDB; en la demostración guarda las reservas en un archivo JSON con bloqueo."],
+        ["Entorno de desarrollo", "Docker Compose levanta PHP con Apache y MariaDB. Ambos servicios se comunican por una red privada; la base de datos no queda expuesta directamente a Internet."],
     ]
     story.append(make_table(["Capa", "Responsabilidad"], layer_rows, [37 * mm, 131 * mm], compact=True))
     story += [Spacer(1, 6), h2("Flujo de una solicitud")]
     story.append(p(
-        "Cuando alguien consulta un horario, la página le pide la información al servidor. El servidor revisa que la persona haya iniciado sesión y que el día y el horario sean válidos. Después guarda la reserva en el lugar que corresponde. En la prueba no se mueve dinero."
+        "El recorrido empieza cuando una persona abre una URL. El Front Controller recibe esa solicitud y el Router interpreta la dirección para enviarla al controlador adecuado. Ese controlador llama a la acción correspondiente; las reglas revisan la sesión, la disponibilidad y los datos. Por último, la capa de persistencia lee o guarda la información. Así mantenemos separadas la pantalla, las reglas y el almacenamiento."
     ))
-    story.append(p("Estamos ordenando el código por partes para que sea más fácil de entender y mejorar a medida que avance el proyecto.", "BodyCompact"))
+    story.append(p("En el entorno de desarrollo, Docker Compose conecta la aplicación y MariaDB mediante una red privada. Esto permite que PHP acceda a la base de datos sin publicar su puerto para otros equipos.", "BodyCompact"))
     story.append(PageBreak())
 
     # Page 10 - DB.
