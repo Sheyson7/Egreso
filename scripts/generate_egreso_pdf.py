@@ -433,7 +433,7 @@ class ProjectDoc(BaseDocTemplate):
         canvas.line(self.leftMargin, 11 * mm, PAGE_W - self.rightMargin, 11 * mm)
         canvas.setFont(FONT, 6.5)
         canvas.setFillColor(MUTED)
-        canvas.drawString(self.leftMargin, 7.5 * mm, "Versión revisada: 5 de noviembre de 2026")
+        canvas.drawString(self.leftMargin, 7.5 * mm, "Versión revisada: 9 de noviembre de 2026")
         canvas.drawRightString(PAGE_W - self.rightMargin, 7.5 * mm, f"Página {doc.page - 1}")
         canvas.restoreState()
 
@@ -467,24 +467,33 @@ def build_story():
     ))
     story += [Spacer(1, 9), h2("Índice")]
     index_rows = [
-        ["01", "Empresa, figura propuesta y equipo", "2"],
-        ["02", "Problema, alcance y personas interesadas", "3"],
-        ["03", "Funciones de la página", "4"],
-        ["04", "Calidad y situaciones de uso", "5"],
-        ["05", "Riesgos y cómo responder", "6"],
-        ["06", "FODA y posibilidades del proyecto", "7"],
-        ["07", "Partes de la página", "8"],
-        ["08", "Qué datos guardamos y cómo se relacionan", "9-10"],
-        ["09", "La prueba y el pago real", "11"],
-        ["10", "Preparación y mantenimiento", "12"],
-        ["11", "Etapas, aceptación y conclusión", "13"],
-        ["12", "Actas y palabras técnicas", "14"],
-        ["13", "Fuentes y puntos por confirmar", "15"],
+        ["A", "Abstract (English)", "2"],
+        ["01", "Empresa, figura propuesta y equipo", "3"],
+        ["02", "Problema, alcance y personas interesadas", "4"],
+        ["03", "Funciones de la página", "5"],
+        ["04", "Calidad y situaciones de uso", "6"],
+        ["05", "Riesgos y cómo responder", "7"],
+        ["06", "FODA y posibilidades del proyecto", "8"],
+        ["07", "Partes de la página", "9"],
+        ["08", "Qué datos guardamos y cómo se relacionan", "10-11"],
+        ["09", "La prueba y el pago real", "12"],
+        ["10", "Preparación y mantenimiento", "13"],
+        ["11", "Etapas, aceptación y conclusión", "14"],
+        ["12", "Actas y palabras técnicas", "15"],
+        ["13", "Fuentes y puntos por confirmar", "16"],
     ]
     story.append(make_table(["N.º", "Sección", "Pág."], index_rows, [14 * mm, 136 * mm, 18 * mm], compact=True))
     story.append(PageBreak())
 
-    # Page 3 - business, legal status, team.
+    # English abstract required for the Technical English deliverable.
+    story += title("Inglés técnico", "Abstract", "Summary of the project proposal and its current technical scope.")
+    story.append(p(
+        "Small sports facilities often manage court bookings through phone calls or informal messages. This can lead to duplicate requests, uncertainty about availability, and limited information for customers and staff. This project proposes a web-based booking system for Seberih, a sports complex in Sauce, Canelones, Uruguay, with two five-a-side football courts. The system allows customers to create an account, check available dates and time slots, choose a court and booking duration, and manage reservations linked to their account. The prototype is built with PHP, MariaDB, HTML, CSS, and JavaScript, and adapts to desktop, tablet, and mobile screens. Docker Compose runs the Apache and PHP application and MariaDB in separate containers connected through a private network. In the local demonstration, accounts are stored in MariaDB, while test reservations are saved in a local JSON file. No payment is processed in this mode; the interface only displays an estimated 15 percent deposit. A Mercado Pago integration is planned, but real payments require merchant credentials, a public HTTPS address, and verified payment notifications. The prototype provides a basis for evaluation with Seberih and for future work on deployment, administration, security, backups, and payment processing."
+    ))
+    story.append(p("<b>Keywords:</b> sports facility management; online court booking; PHP; Docker Compose.", "BodyCompact"))
+    story.append(PageBreak())
+
+    # Page 4 - business, legal status, team.
     story += title("01 | Quiénes somos", "MateCodeUY y nuestra propuesta", "Somos un equipo de estudiantes y este es el primer proyecto que desarrollamos para un cliente de nuestra zona.")
     story += [h2("Actividad y propuesta de valor"), p(
         "MateCodeUY es el nombre que elegimos para nuestro emprendimiento en este proyecto. La idea es ayudar a organizaciones de la zona a resolver tareas cotidianas con herramientas digitales sencillas. Nuestro primer trabajo es una página para consultar y reservar las canchas de Seberih."
@@ -832,9 +841,11 @@ def build_story():
     story += [Spacer(1, 8), h2("Glosario")]
     glossary = [
         ["ACID", "Propiedades de transacciones para mantener consistencia, aislamiento y durabilidad."],
+        ["Abstract", "Resumen en inglés que presenta el contexto, el problema y la propuesta del proyecto."],
         ["Clean Architecture", "Separación de reglas de negocio respecto de interfaces y tecnologías externas."],
         ["CSRF", "Ataque que intenta enviar acciones usando una sesión autenticada; se mitiga con tokens por formulario."],
         ["Docker Compose", "Herramienta para declarar y operar varios servicios de contenedores desde un archivo."],
+        ["Keywords", "Palabras clave que ayudan a indexar y clasificar un trabajo."],
         ["Webhook", "Notificación de servidor a servidor que comunica un evento, por ejemplo el resultado de un pago."],
         ["Modo demo", "Entorno local que guarda una reserva de prueba sin confirmar un pago ni conectar usuarios entre equipos."],
         ["SRL", "Sociedad de Responsabilidad Limitada; en este proyecto se plantea como forma jurídica académica propuesta."],
@@ -852,7 +863,7 @@ def build_story():
         "[4] Martin, R. C. (2017). <i>Clean Architecture: A Craftsman's Guide to Software Structure and Design</i>. Prentice Hall.",
         "[5] Pressman, R. S. (2010). <i>Ingeniería del software: Un enfoque práctico</i> (7.ª ed.). McGraw-Hill.",
         "[6] Docker, Inc. (s. f.). <i>Docker Compose documentation</i>. <link href='https://docs.docker.com/compose/' color='#176B70'>https://docs.docker.com/compose/</link>.",
-        "[7] Repositorio del sistema de egreso. <i>Esquema SQL, controladores, reglas de dominio, scripts y configuración Compose</i>. Versión de trabajo revisada el 5 de noviembre de 2026.",
+        "[7] Repositorio del sistema de egreso. <i>Esquema SQL, controladores, reglas de dominio, scripts y configuración Compose</i>. Versión de trabajo revisada el 9 de noviembre de 2026.",
     ]
     for item in references:
         story.append(p(item, "BodyCompact"))
@@ -906,7 +917,7 @@ def draw_cover_text(canvas, doc):
     canvas.drawCentredString(PAGE_W / 2, PAGE_H - 266 * mm, "Geisson De Castro | Gonzalo Ortega | Lucas Alfonzo | Alejo Montenegro")
     canvas.setFillColor(MUTED)
     canvas.setFont(FONT, 7.2)
-    canvas.drawCentredString(PAGE_W / 2, 22 * mm, "Documento integral revisado | 5 de noviembre de 2026")
+    canvas.drawCentredString(PAGE_W / 2, 22 * mm, "Documento integral revisado | 9 de noviembre de 2026")
     canvas.restoreState()
 
 
