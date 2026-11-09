@@ -62,6 +62,9 @@ Los scripts de mantenimiento están en `scripts/`:
 - `audit_resources.sh`: agrega uso de disco y estado/consumo de Docker a `storage/logs/resource-audit.log`.
 - `monitor_security.sh`: busca patrones de solicitudes sospechosas en el log de acceso y genera un informe sin guardar credenciales.
 - `provision/init_system.sh`: instala unidades de usuario de systemd para iniciar Compose al arrancar y auditar recursos cada 15 minutos; configura logrotate para conservar 14 rotaciones y activa `loginctl linger`.
+- `provision/install_backup_cron.sh`: instala, para el usuario técnico no root, el respaldo diario a las 02:00 con retención de 30 días. Requiere Docker Compose, `crontab` y `.env`; revisar y probar restauración y copia externa antes de usar en producción.
+
+Los documentos académicos se generan con `scripts/generate_egreso_pdf.py` y `scripts/generate_management_pdf.py`; sus salidas están en `output/pdf/`. El modelo conceptual 3D de la marca está en `assets/3d/matecodeuy-logo.scad`; es un archivo digital pendiente de impresión física.
 
 En un servidor Linux con systemd, logrotate, sudo y Docker rootless configurado, prepará `.env` y ejecutá `./provision/init_system.sh` como el usuario técnico dedicado (nunca como root). Después de actualizar código, reconstruí e iniciá con `docker compose up --build -d`. El instalador usa `sudo` solo para instalar la regla de logrotate y habilitar el inicio sin sesión interactiva. Configurá `APP_ENV=production`, `BOOKING_DEMO_MODE=false`, `SESSION_COOKIE_SECURE=true`, `APP_URL` con HTTPS y las credenciales reales antes de publicar pagos.
 
